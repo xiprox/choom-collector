@@ -1,12 +1,12 @@
 # Aims
 
 ```text
-Purpose:     Who Cyberpunk Co-op Tools is for, what it does for them, and what it won't do.
+Purpose:     Who Choom Collector is for, what it does for them, and what it won't do.
 Depends on:  nothing
 Decides:     The users, the two jobs, what's out of scope, and the relay and license commitments.
 ```
 
-Cyberpunk Co-op Tools serves a mod author testing their mods with friends in a co-op session of Cyberpunk 2077.
+Choom Collector serves a mod author testing their mods with friends in a co-op session of Cyberpunk 2077.
 It does two jobs, both without anyone's hands on it once a session runs: the host's mod builds reach every tester's game folder as they're saved, and every tester's logs reach the host's PC, where the host has Claude read them.
 
 ## Who it's for

@@ -1,6 +1,6 @@
 # The relay
 
-Cyberpunk Co-op Tools connects players through a relay the host runs: a Cloudflare Worker that passes each player's messages on and keeps none of them.
+Choom Collector connects players through a relay the host runs: a Cloudflare Worker that passes each player's messages on and keeps none of them.
 It runs on Cloudflare's free plan, and one relay serves as many sessions as its host wants.
 A tester needs nothing from this page: the host's invite carries the relay's address.
 

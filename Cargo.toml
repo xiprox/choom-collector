@@ -1,16 +1,16 @@
 # The program's own package sits at the workspace root, so release-please, which updates the
 # version of the root package, versions the program.
 [package]
-name = "cyberpunk-coop-tools"
+name = "choom-collector"
 version = "0.3.0"
 edition.workspace = true
 description = "Test Cyberpunk 2077 mods with friends: the host's builds go out, everyone's logs come back."
 license = "MIT"
-repository = "https://github.com/xiprox/cyberpunk-coop-tools"
+repository = "https://github.com/xiprox/choom-collector"
 publish = false
 
 [[bin]]
-name = "cyberpunk-coop-tools"
+name = "choom-collector"
 path = "src/app/main.rs"
 
 [dependencies]

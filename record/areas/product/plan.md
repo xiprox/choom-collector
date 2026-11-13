@@ -65,7 +65,7 @@ Done on 2026-11-13 ([build log](../build/log.md#2026-11-13-an-installed-020-foun
 
 ## 8. A session with friends
 
-The user's group plays a session on Cyberpunk Co-op Tools instead of CP77 Log Collector.
+The user's group plays a session on Choom Collector instead of CP77 Log Collector.
 
 Exit: the user reports a session where the host got everyone's logs and every follower got the host's builds.
 

@@ -240,15 +240,15 @@ Contractions are fine wherever you'd say them aloud.
 **American English**, with the Oxford comma.
 Names keep their own spelling.
 
-**The product is Cyberpunk Co-op Tools**, in prose, headings, commits, and anything a player reads.
+**The product is Choom Collector**, in prose, headings, commits, and anything a player reads.
 A name that can't hold spaces takes one of these forms:
 
 | Where | Form |
 | --- | --- |
-| Lowercase names: the repository, the program, and Velopack's pack ID | `cyberpunk-coop-tools` |
+| Lowercase names: the repository, the program, and Velopack's pack ID | `choom-collector` |
 | The library crates, named for their part | `coop-<part>`, as in `coop-logs` |
-| Rust types, and folders on Windows | `CyberpunkCoopTools`, as in `%APPDATA%\CyberpunkCoopTools\` |
-| Folders on Linux | `cyberpunk-coop-tools`, as in `~/.config/cyberpunk-coop-tools/` |
+| Rust types, and folders on Windows | `ChoomCollector`, as in `%APPDATA%\ChoomCollector\` |
+| Folders on Linux | `choom-collector`, as in `~/.config/choom-collector/` |
 
 The game is Cyberpunk 2077, or the game.
 The app it replaces is CP77 Log Collector.
@@ -330,7 +330,7 @@ These patterns are beyond the lint, so the `doc-reviewer` agent looks for them:
 - Use at most one em dash per paragraph, with a space on each side.
   A colon, a period, or a pair of commas usually does better.
 - Put a callout box (`> **Note**`, GitHub alerts) only on an amendment pointer or on a warning that costs something if ignored.
-- Write paths with placeholders, never a real home folder: `%APPDATA%\CyberpunkCoopTools\`, `<user>`.
+- Write paths with placeholders, never a real home folder: `%APPDATA%\ChoomCollector\`, `<user>`.
 - Quote sources briefly, and link to them or cite them as [Evidence](#evidence) says.
 
 ## Code comments

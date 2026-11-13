@@ -20,7 +20,7 @@ env:
   # Keep in step with the velopack crate's version in Cargo.toml.
   VPK_VERSION: 1.2.161
   # Velopack's id for the app. Installs update only from packages with the same id.
-  PACK_ID: cyberpunk-coop-tools
+  PACK_ID: choom-collector
 
 jobs:
   release-please:
@@ -50,11 +50,11 @@ jobs:
           # on the shared release (a non-default channel is part of every file name).
           - os: windows-latest
             channel: win-x64
-            exe: cyberpunk-coop-tools.exe
+            exe: choom-collector.exe
             icon: assets/icon/app.ico
           - os: ubuntu-22.04
             channel: linux-x64
-            exe: cyberpunk-coop-tools
+            exe: choom-collector
             icon: assets/icon/app.png
     runs-on: ${{ matrix.os }}
     defaults:
@@ -72,7 +72,7 @@ jobs:
       - name: Version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            base=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "cyberpunk-coop-tools") | .version')
+            base=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "choom-collector") | .version')
             echo "VERSION=$base-dryrun.${{ github.run_number }}" >> "$GITHUB_ENV"
           else
             echo "VERSION=${{ needs.release-please.outputs.version }}" >> "$GITHUB_ENV"
@@ -118,7 +118,7 @@ jobs:
 
       - name: Pack
         run: |
-          vpk pack -u "$PACK_ID" --packTitle "Cyberpunk Co-op Tools" -v "$VERSION" \
+          vpk pack -u "$PACK_ID" --packTitle "Choom Collector" -v "$VERSION" \
             -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases -i "${{ matrix.icon }}"
 
       - name: Attach to the release

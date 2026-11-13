@@ -2,7 +2,7 @@
 # moving the mouse, so it can run while someone uses the PC.
 #
 #   tools/capture-window.ps1 -Out shot.png [-AppArgs "--demo host"] [-Click "298,177"] [-Hover "865,97"]
-#                            [-Exe target/debug/cyberpunk-coop-tools.exe] [-Wait 2]
+#                            [-Exe target/debug/choom-collector.exe] [-Wait 2]
 #   tools/capture-window.ps1 -Out shot.png -ProcessId 1234
 #
 # -ProcessId pictures a copy that's already running, after any -Click or -Hover, and leaves it
@@ -17,9 +17,9 @@
 # picture is the client area only, at the window's own DPI.
 param(
     [Parameter(Mandatory = $true)][string]$Out,
-    [string]$Exe = "$PSScriptRoot\..\target\debug\cyberpunk-coop-tools.exe",
+    [string]$Exe = "$PSScriptRoot\..\target\debug\choom-collector.exe",
     [double]$Wait = 2,
-    [string]$Title = 'Cyberpunk Co-op Tools',
+    [string]$Title = 'Choom Collector',
     [string]$AppArgs = '',
     [string]$Click = '',
     [string]$Hover = '',

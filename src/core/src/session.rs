@@ -70,7 +70,7 @@ mod updates {
 
     use crate::state::Snapshot;
 
-    const RELEASES: &str = "https://github.com/xiprox/cyberpunk-coop-tools";
+    const RELEASES: &str = "https://github.com/xiprox/choom-collector";
 
     pub struct Ready {
         pub version: String,
@@ -947,7 +947,7 @@ impl Hosting {
             ToHost::Hello(hello) => {
                 if hello.protocol != PROTOCOL {
                     return vec![(Some(from), ToTester::Refused {
-                        reason: format!("{host_name} runs another version of Cyberpunk Co-op Tools; update so you both run the same one"),
+                        reason: format!("{host_name} runs another version of Choom Collector; update so you both run the same one"),
                     })];
                 }
                 // A player who comes back keeps their place in the list, and their ID.

@@ -6,7 +6,7 @@ Depends on:  product/02-v1-scope.md
 Decides:     The crates and what each holds, what runs on which thread, how state reaches the window and commands leave it, and the data folder.
 ```
 
-The app is one program, `cyberpunk-coop-tools`, built from five crates in one Cargo workspace.
+The app is one program, `choom-collector`, built from five crates in one Cargo workspace.
 Only the window's crate compiles gpui, so the four that hold the logic build and test without it.
 The logic runs on a tokio runtime of its own, and the window gets a fresh snapshot of the state whenever it changes, and sends back commands.
 
@@ -14,7 +14,7 @@ The logic runs on a tokio runtime of its own, and the window gets a fresh snapsh
 
 | Crate | Folder | Holds | Uses |
 | --- | --- | --- | --- |
-| `cyberpunk-coop-tools` | `src/app` | The window, the theme, the command line, and the program's entry point | `coop-core` |
+| `choom-collector` | `src/app` | The window, the theme, the command line, and the program's entry point | `coop-core` |
 | `coop-core` | `src/core` | Settings, finding the game, the relay client, the session and its players, and passing messages to logs and mods | `coop-proto`, `coop-logs`, `coop-mods` |
 | `coop-logs` | `src/logs` | Finding and following logs on a player's PC, and writing them into the host's folder | `coop-proto` |
 | `coop-mods` | `src/mods` | Finding mods, their manifests, sharing and following, the host's cache, and applying a follow | `coop-proto` |
@@ -45,7 +45,7 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 
 | What | Windows | Linux |
 | --- | --- | --- |
-| The data folder | `%APPDATA%\CyberpunkCoopTools\` | `~/.config/cyberpunk-coop-tools/` |
+| The data folder | `%APPDATA%\ChoomCollector\` | `~/.config/choom-collector/` |
 | Settings | `settings.toml` in the data folder | the same |
 | The app's own log | `app.log` in the data folder, moved to `app.1.log` at 5 MB | the same |
 | The mods this PC shares and follows | `mods.toml` in the data folder | the same |

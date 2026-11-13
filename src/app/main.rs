@@ -16,7 +16,7 @@ use gpui_kit::component::{Theme, ThemeMode, TitleBar};
 use gpui_kit::*;
 
 const USAGE: &str = "\
-Usage: cyberpunk-coop-tools [options]
+Usage: choom-collector [options]
 
   --data-dir <folder>   keep settings and the app's log in this folder
   --demo <screen>       show a made-up session: host, tester, setup-join, or setup-host
@@ -91,7 +91,7 @@ fn main() -> ExitCode {
                 window_min_size: Some(size(px(760.), px(480.))),
                 titlebar: Some(TitlebarOptions {
                     // The title the taskbar shows, and tools/capture-window.ps1 looks for.
-                    title: Some("Cyberpunk Co-op Tools".into()),
+                    title: Some("Choom Collector".into()),
                     ..TitleBar::title_bar_options()
                 }),
                 ..TitleBar::window_options()

@@ -17,7 +17,7 @@ Everything else it needs, the game, its version, the name, and the system, it fi
 | `relay` | The relay's address as the player entered it, such as `relay.example.net` |
 | `code` | The code this PC hosts, or the one it joins, without the hyphen |
 | `resume` | The relay's resume token for the code this PC hosts |
-| `logs_folder` | Where the host's logs go; the default is `Cyberpunk Co-op Tools Logs` in the player's Documents folder |
+| `logs_folder` | Where the host's logs go; the default is `Choom Collector Logs` in the player's Documents folder |
 | `game_folder` | The game folder setup confirmed or the player chose |
 | `install_id` | 32 hex digits picked once per install, so the host knows a returning tester as the same player |
 | `extra_paths` | The host's extra paths, relative to the game folder |

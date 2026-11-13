@@ -1,6 +1,6 @@
 # Record
 
-The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [writing.md](../.claude/rules/writing.md) describes.
+The documents agents write for Choom Collector live here, in the kinds [writing.md](../.claude/rules/writing.md) describes.
 
 - [areas/product/plan.md](areas/product/plan.md): the stages from an empty repository to v1, and where each one stands.
 - [areas/product/01-aims.md](areas/product/01-aims.md): who the app is for, its two jobs, and what it won't do.
@@ -16,7 +16,8 @@ The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [wr
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
 - [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
 - [areas/build/log.md](areas/build/log.md): what the release pipeline produced, what's untested in it, and the repository going public.
-- [decisions/001-rust-app-of-its-own.md](decisions/001-rust-app-of-its-own.md): Cyberpunk Co-op Tools is a Rust app of its own, for Cyberpunk 2077 only.
+- [decisions/001-rust-app-of-its-own.md](decisions/001-rust-app-of-its-own.md): Choom Collector is a Rust app of its own, for Cyberpunk 2077 only.
 - [decisions/002-gpui-through-gpui-kit.md](decisions/002-gpui-through-gpui-kit.md): The window is drawn with gpui, through Longbridge's gpui-kit.
 - [decisions/003-relay-forked-from-fsc-editor.md](decisions/003-relay-forked-from-fsc-editor.md): Every connection goes through a relay the host runs, forked from fsc-editor's.
 - [decisions/004-releases-with-release-please-and-velopack.md](decisions/004-releases-with-release-please-and-velopack.md): Releases come from release-please, packed with Velopack.
+- [decisions/005-named-choom-collector.md](decisions/005-named-choom-collector.md): The app is named Choom Collector, after Cyberpunk Co-op Tools until 0.3.0.

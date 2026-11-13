@@ -1,4 +1,4 @@
-# Cyberpunk Co-op Tools
+# Choom Collector
 
 Play Cyberpunk 2077 together: everyone's logs in one place, and mods shared between friends.
 A Rust rewrite of CP77 Log Collector, for groups that test mods together.
@@ -30,7 +30,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fe
 2. Merging that PR creates the GitHub release and its tag.
 3. The same workflow then builds Windows and Linux, packs them with
    [Velopack](https://velopack.io), and attaches them to the release: a Windows installer
-   (`cyberpunk-coop-tools-win-x64-Setup.exe`), a portable zip, a Linux AppImage, and the packages the
+   (`choom-collector-win-x64-Setup.exe`), a portable zip, a Linux AppImage, and the packages the
    app updates itself from, deltas included.
 
 Windows and Linux use the `win-x64` and `linux-x64` channels, so their files never clash on

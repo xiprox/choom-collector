@@ -243,7 +243,7 @@ impl Collector {
 
     fn write_status(&self, stopped: bool) {
         let mut text = format!(
-            "Cyberpunk Co-op Tools, the logs of this session{}\nupdated {}\n\n",
+            "Choom Collector, the logs of this session{}\nupdated {}\n\n",
             if stopped { ", stopped" } else { "" },
             stamp(Local::now())
         );

@@ -35,9 +35,16 @@ pub fn start(options: Options) -> (async_channel::Sender<Command>, async_channel
     match options.demo {
         Some(screen) => demo::start(screen, options.app_version),
         None => {
-            let data_dir = options.data_dir.unwrap_or_else(settings::default_data_dir);
+            let data_dir = match options.data_dir {
+                Some(dir) => dir,
+                None => {
+                    // Only the usual folder moves; a test run's --data-dir is left as it is.
+                    settings::move_old_data_dir();
+                    settings::default_data_dir()
+                }
+            };
             let app_log = applog::start(&data_dir);
-            log::info!("Cyberpunk Co-op Tools {} starting, data in {}", options.app_version, data_dir.display());
+            log::info!("Choom Collector {} starting, data in {}", options.app_version, data_dir.display());
             session::start(data_dir, app_log, options.app_version, options.name, options.local_app_data)
         }
     }

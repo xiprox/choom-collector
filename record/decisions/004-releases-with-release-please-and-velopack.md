@@ -27,6 +27,6 @@ It released 0.1.0 with a Windows installer of 9.4 MB, a portable zip, a Linux Ap
 - Commit titles follow Conventional Commits ([writing.md](../../.claude/rules/writing.md#commit-messages)).
 - Windows packs on the `win-x64` channel and Linux on `linux-x64`, so their files never clash on the shared release.
 - The `velopack` crate's version and the workflow's `VPK_VERSION` move together.
-- Velopack's pack ID is `cyberpunk-coop-tools`; 0.1.0 went out as `cp77-coop-tools`, so the workflow skips it as a base for delta packages.
+- Velopack's pack ID is `choom-collector`; 0.1.0 went out as `cp77-coop-tools`, so the workflow skips it as a base for delta packages.
 - Delta packages are unverified until a release follows one made under the same pack ID.
 - The app reads its updates from the repository's GitHub releases, which a private repository hides from anyone without a token (unverified), so updates wait for the repository to go public.

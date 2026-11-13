@@ -1,6 +1,6 @@
-# 001: Cyberpunk Co-op Tools is a Rust app of its own, for Cyberpunk 2077 only
+# 001: Choom Collector is a Rust app of its own, for Cyberpunk 2077 only
 
-Cyberpunk Co-op Tools is written from scratch in Rust, in a repository of its own, and does the jobs CP77 Log Collector does for the game and only that game.
+Choom Collector is written from scratch in Rust, in a repository of its own, and does the jobs CP77 Log Collector does for the game and only that game.
 It replaces CP77 Log Collector once it does everything [the v1 scope](../areas/product/02-v1-scope.md) lists, and until then the user's friends keep playing with the C# app.
 Decided by the user on 2026-11-13.
 
@@ -27,6 +27,6 @@ The user wanted it "generic in features, but still explicitly for cyberpunk. any
 ## What it commits us to
 
 - CP77 Log Collector is the reference for every behavior the scope keeps, and a behavior it has that the scope drops is dropped on purpose, as [CLAUDE.md](../../CLAUDE.md#working-rules) requires.
-- The protocol starts over: Cyberpunk Co-op Tools doesn't talk to CP77 Log Collector, so a group moves from one to the other together.
+- The protocol starts over: Choom Collector doesn't talk to CP77 Log Collector, so a group moves from one to the other together.
 - The repository is meant to go public, so nothing personal goes in it.
   Its license is open (TBD: the user hasn't picked one).

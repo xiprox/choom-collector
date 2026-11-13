@@ -1,6 +1,6 @@
-# Cyberpunk Co-op Tools
+# Choom Collector
 
-Cyberpunk Co-op Tools is a desktop app for testing Cyberpunk 2077 mods with friends: the host's mod builds reach every tester's game folder as they're saved, and every tester's logs reach the host's PC, where the host has Claude read them.
+Choom Collector is a desktop app for testing Cyberpunk 2077 mods with friends: the host's mod builds reach every tester's game folder as they're saved, and every tester's logs reach the host's PC, where the host has Claude read them.
 Don't write product code until a stage in [the plan](record/areas/product/plan.md) covers it.
 
 ## Layout
@@ -21,7 +21,7 @@ Don't write product code until a stage in [the plan](record/areas/product/plan.m
 
 ## Prior work
 
-Cyberpunk Co-op Tools replaces CP77 Log Collector, a C# app that does the same jobs, so that app is the reference for every behavior: its `README.md` describes them and its `src/` holds the code.
+Choom Collector replaces CP77 Log Collector, a C# app that does the same jobs, so that app is the reference for every behavior: its `README.md` describes them and its `src/` holds the code.
 It and the other projects below are sibling checkouts on the development machine.
 Read and run them, but don't edit their files, commit, or switch branches there.
 
@@ -65,7 +65,7 @@ It can't see inside images, so check screenshots by eye before adding them.
 ## Building
 
 `cargo build` builds the workspace.
-The window's crate, `src/app`, compiles gpui, which takes minutes from clean, so iterate with `cargo run -p cyberpunk-coop-tools` in the dev profile.
+The window's crate, `src/app`, compiles gpui, which takes minutes from clean, so iterate with `cargo run -p choom-collector` in the dev profile.
 A Linux build needs the X11, Wayland, xkbcommon, and fontconfig development packages, which CI's Ubuntu 22.04 runner installs.
 Before a Linux build in WSL, ask the user to run ci.yml's `apt-get install` line there, since it needs their sudo password.
 

@@ -814,6 +814,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "choom-collector"
+version = "0.3.0"
+dependencies = [
+ "async-channel",
+ "chrono",
+ "coop-core",
+ "gpui-kit",
+ "log",
+ "velopack",
+ "winresource",
+]
+
+[[package]]
 name = "chrono"
 version = "0.4.45"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1236,19 +1249,6 @@ checksum = "914a755b7c2d4af2bdcff7ce1739e2db9a1b81a9b07123d8015786ae03c0980d"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
-]
-
-[[package]]
-name = "cyberpunk-coop-tools"
-version = "0.3.0"
-dependencies = [
- "async-channel",
- "chrono",
- "coop-core",
- "gpui-kit",
- "log",
- "velopack",
- "winresource",
 ]
 
 [[package]]

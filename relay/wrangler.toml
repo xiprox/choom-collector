@@ -1,3 +1,5 @@
+# The app's old name, kept when it became Choom Collector: a new name would deploy a second Worker,
+# and a relay that's running keeps its custom domain on this one. Only Cloudflare's dashboard shows it.
 name = "cyberpunk-coop-tools-relay"
 main = "src/index.ts"
 compatibility_date = "2026-08-01"

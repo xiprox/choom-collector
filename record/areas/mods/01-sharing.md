@@ -56,7 +56,7 @@ A mod whose folders two players offered can be split between them, and then it's
 - The list names each sharer's PC by its PC ID, the first 8 bytes of the SHA-256 of its install ID in hex, because the host knows a returning tester by the install ID itself (read in CP77 Log Collector, src/Mods.cs, `ModLayout.PcId`).
 - **Changed:** when a player's link drops, the hub keeps their folders for 60s, `AWAY_GRACE` in `hub.rs`, which matches `TESTER_GRACE` in `src/core/src/session.rs`.
   The list marks those folders away, and followers show the mod as paused.
-  CP77 Log Collector hands a folder over the moment its sharer's connection drops (read in CP77 Log Collector, src/Collector.cs, `PeerGone`), but Cyberpunk Co-op Tools reconnects by itself ([relay and sessions](../network/01-relay-and-sessions.md#reconnecting)), and a handover on every drop would make each follower agree to the sharer again.
+  CP77 Log Collector hands a folder over the moment its sharer's connection drops (read in CP77 Log Collector, src/Collector.cs, `PeerGone`), but Choom Collector reconnects by itself ([relay and sessions](../network/01-relay-and-sessions.md#reconnecting)), and a handover on every drop would make each follower agree to the sharer again.
 
 ## Messages
 
@@ -207,7 +207,7 @@ Hashing reads at most 32 MiB a tick, picking up a large file where the last tick
 ## Known limits
 
 - `unfollow` with `delete_copy` deletes and backs up the whole mod before it returns.
-- **Dropped:** following a folder by name whoever shares it, which CP77 Log Collector offers through `--subscribe` (read in CP77 Log Collector, src/Mods.cs, `ModFollow`), since Cyberpunk Co-op Tools has no such option.
+- **Dropped:** following a folder by name whoever shares it, which CP77 Log Collector offers through `--subscribe` (read in CP77 Log Collector, src/Mods.cs, `ModFollow`), since Choom Collector has no such option.
 - A game that closes and starts again within the 2s between checks keeps a stale restart mark until it closes.
 - `Fetching` counts files, so a follower fetching one large archive shows 0 of 1 until it lands.
 - A follower can't hash a file the running game holds without letting others read it, and shows the mod as checking until the game closes (unverified: we don't know whether the game holds any file that way).

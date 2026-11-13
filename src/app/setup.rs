@@ -140,7 +140,7 @@ impl AppView {
                                 .child(
                                     v_flex()
                                         .gap(px(4.))
-                                        .child(div().text_size(TITLE_SIZE).line_height(px(20.)).font_weight(FontWeight::SEMIBOLD).text_color(color(STRONG)).child("Cyberpunk Co-op Tools"))
+                                        .child(div().text_size(TITLE_SIZE).line_height(px(20.)).font_weight(FontWeight::SEMIBOLD).text_color(color(STRONG)).child("Choom Collector"))
                                         .child(div().text_size(SMALL_SIZE).text_color(color(MUTED)).child("The host's mod builds go out to everyone, and everyone's logs go back to the host")),
                                 ),
                         )

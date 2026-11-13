@@ -34,7 +34,7 @@ impl Rig {
         let root = tempfile::tempdir().unwrap();
         let game = root.path().join("Cyberpunk 2077");
         let local_app_data = root.path().join("AppData").join("Local");
-        let app_log = root.path().join("CyberpunkCoopTools").join("app.log");
+        let app_log = root.path().join("ChoomCollector").join("app.log");
         let logs = if session_in_game { game.join("Co-op Logs") } else { root.path().join("Co-op Logs") };
         let session = logs.join("2026-11-13 K7R-M2Q");
         fs::create_dir_all(&game).unwrap();

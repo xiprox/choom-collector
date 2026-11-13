@@ -55,16 +55,42 @@ impl From<Role> for SavedRole {
     }
 }
 
-/// `%APPDATA%\CyberpunkCoopTools` on Windows, `~/.config/cyberpunk-coop-tools` on Linux.
+/// `%APPDATA%\ChoomCollector` on Windows, `~/.config/choom-collector` on Linux.
 pub fn default_data_dir() -> PathBuf {
     let base = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
-    base.join(if cfg!(windows) { "CyberpunkCoopTools" } else { "cyberpunk-coop-tools" })
+    base.join(if cfg!(windows) { "ChoomCollector" } else { "choom-collector" })
+}
+
+/// Moves the data folder the app had as Cyberpunk Co-op Tools to its own name, once, so settings,
+/// the session code, and what this PC shares and follows carry over the rename. Does nothing when
+/// the new folder exists already or there's no old one.
+pub fn move_old_data_dir() {
+    if let Some(base) = dirs::config_dir() {
+        move_old_data_dir_in(&base);
+    }
+}
+
+/// [`move_old_data_dir`] within `base`, the system's folder for settings; true when it moved one.
+fn move_old_data_dir_in(base: &Path) -> bool {
+    let (old, new) = if cfg!(windows) { ("CyberpunkCoopTools", "ChoomCollector") } else { ("cyberpunk-coop-tools", "choom-collector") };
+    let (old, new) = (base.join(old), base.join(new));
+    if new.exists() || !old.is_dir() {
+        return false;
+    }
+    match std::fs::rename(&old, &new) {
+        Ok(()) => true,
+        // The app's log isn't open yet, so this goes to the console of a dev build only.
+        Err(e) => {
+            eprintln!("couldn't move {} to {}: {e}", old.display(), new.display());
+            false
+        }
+    }
 }
 
 /// Where the host's logs go unless setup says otherwise.
 pub fn default_logs_folder() -> PathBuf {
     let base = dirs::document_dir().or_else(dirs::home_dir).unwrap_or_else(|| PathBuf::from("."));
-    base.join("Cyberpunk Co-op Tools Logs")
+    base.join("Choom Collector Logs")
 }
 
 impl Settings {
@@ -141,6 +167,24 @@ mod tests {
         assert_eq!(again.role, Some(SavedRole::Host));
         assert_eq!(again.code, "K7RM2Q");
         std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn the_old_data_folder_moves_to_the_new_name_once() {
+        let base = std::env::temp_dir().join(format!("coop-rename-{}", rand::random::<u32>()));
+        let (old, new) = if cfg!(windows) { ("CyberpunkCoopTools", "ChoomCollector") } else { ("cyberpunk-coop-tools", "choom-collector") };
+        std::fs::create_dir_all(base.join(old)).unwrap();
+        std::fs::write(base.join(old).join("settings.toml"), "code = \"K7RM2Q\"").unwrap();
+
+        assert!(move_old_data_dir_in(&base));
+        assert_eq!(std::fs::read_to_string(base.join(new).join("settings.toml")).unwrap(), "code = \"K7RM2Q\"");
+        assert!(!base.join(old).exists());
+
+        // A second start, or an old folder that turns up again, leaves the new one alone.
+        std::fs::create_dir_all(base.join(old)).unwrap();
+        assert!(!move_old_data_dir_in(&base));
+        assert!(base.join(new).join("settings.toml").exists());
+        std::fs::remove_dir_all(base).unwrap();
     }
 
     fn answers(relay: &str, code: &str) -> SettingsAnswers {
