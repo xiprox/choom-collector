@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": ["Bash(node tools/prose-lint.mjs:*)", "PowerShell(node tools/prose-lint.mjs:*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/tools/prose-lint.mjs", "--hook"]
+          }
+        ]
+      }
+    ]
+  }
+}

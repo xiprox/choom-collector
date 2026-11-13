@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Window · as a tester</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#08090b}
+a{color:#ddc94f}a:hover{color:#ebdc86}
+</style>
+</helmet>
+<div style="--base: #15171b; --panel: #1a1d22; --raised: #232830; --line: #272b32; --line-soft: #1e2126; --control: #3a404a; --text: #dfe2e7; --strong: #f4f5f7; --muted: #959cab; --accent: #ddc94f; --on-accent: #15171b; --done: #8b94a3; --warn: #e89b5e; --bad: #e5736e; --r: 3px; width: 1120px; height: 700px; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; border: 1px solid #08090b; border-radius: 6px; background: var(--base); color: var(--text); font-family: 'IBM Plex Sans', system-ui, sans-serif; font-size: 13px; line-height: 16px;">
+
+<header style="height: 32px; flex-shrink: 0; display: flex; align-items: stretch; background: var(--panel); border-bottom: 1px solid var(--line);">
+  <div style="display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px;">
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><polygon points="2,14 5,14 9,2 6,2" fill="#ddc94f"></polygon><polygon points="7,14 10,14 14,2 11,2" fill="#ddc94f"></polygon></svg>
+    <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--strong);">K7R-M2Q</span>
+    <span style="color: var(--muted);">Hosted by xip</span>
+  </div>
+  <div style="flex-grow: 1;"></div>
+  <div style="display: flex; align-items: center; gap: 2px; padding-right: 8px;">
+    <button type="button" style="height: 24px; padding: 0 8px; font: inherit; color: var(--text); background: transparent; border: 0; border-radius: var(--r);">Leave</button>
+    <button type="button" aria-label="Settings" style="height: 24px; width: 28px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; border-radius: var(--r); color: var(--muted);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg></button>
+  </div>
+  <button type="button" aria-label="Minimize" style="width: 46px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; color: var(--muted);"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 5h10" stroke="currentColor" stroke-width="1"></path></svg></button>
+  <button type="button" aria-label="Maximize" style="width: 46px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; color: var(--muted);"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"></rect></svg></button>
+  <button type="button" aria-label="Close" style="width: 46px; display: flex; align-items: center; justify-content: center; background: transparent; border: 0; color: var(--muted);"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M0 0l10 10M10 0L0 10" stroke="currentColor" stroke-width="1"></path></svg></button>
+</header>
+
+<div role="note" style="height: 28px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; font-size: 12px; color: var(--warn); background: var(--panel); border-bottom: 1px solid var(--line);">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+  <span>Your game is 2.3 and xip's is 2.31, so mods built for 2.31 may not load</span>
+</div>
+
+<div style="flex-grow: 1; min-height: 0; display: flex;">
+
+  <aside aria-label="Players" style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid var(--line);">
+    <div style="height: 28px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; font-weight: 500; color: var(--muted);"><span style="flex-grow: 1;">Players</span><span style="font-family: 'IBM Plex Mono', monospace;">4</span></div>
+    <div style="height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 12px;"><span style="flex-grow: 1;">xip</span><span style="font-size: 12px; color: var(--muted);">Hosting</span></div>
+    <div style="height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 12px;"><span style="flex-grow: 1;">bossun</span></div>
+    <div style="height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 12px;"><span style="flex-grow: 1;">mira</span><span style="font-size: 12px; color: var(--warn);">Reconnecting</span></div>
+    <div style="height: 26px; display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--raised);"><span style="flex-grow: 1; color: var(--strong);">tetsu</span><span style="font-size: 12px; color: var(--muted);">You</span></div>
+
+    <div style="height: 1px; margin-top: 8px; background: var(--line);"></div>
+    <section aria-label="tetsu" style="padding: 12px; display: flex; flex-direction: column; gap: 12px;">
+      <span style="font-weight: 600; color: var(--strong);">tetsu <span style="font-weight: 400; color: var(--muted);">you</span></span>
+      <dl style="margin: 0; display: grid; grid-template-columns: 72px minmax(0, 1fr); row-gap: 4px; font-size: 12px;">
+        <dt style="color: var(--muted);">Game</dt><dd style="margin: 0; color: var(--warn);">2.3, Steam</dd>
+        <dt style="color: var(--muted);">System</dt><dd style="margin: 0;">SteamOS, Steam Deck</dd>
+        <dt style="color: var(--muted);">Joined</dt><dd style="margin: 0;">13:40, on its own</dd>
+        <dt style="color: var(--muted);">Sent</dt><dd style="margin: 0; font-family: 'IBM Plex Mono', monospace;">4.1 MB</dd>
+      </dl>
+      <div style="display: flex; flex-direction: column; gap: 4px; font-size: 12px;">
+        <span style="font-weight: 500; color: var(--muted);">Logs picked up on this PC</span>
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) 40px; row-gap: 4px;">
+          <span>Game folder logs</span><span style="font-family: 'IBM Plex Mono', monospace; text-align: right;">86</span>
+          <span>Crash reports</span><span style="font-family: 'IBM Plex Mono', monospace; text-align: right;">1</span>
+          <span>The game's own logs and settings</span><span style="font-family: 'IBM Plex Mono', monospace; text-align: right;">3</span>
+          <span style="display: flex; gap: 6px; min-width: 0;"><span style="font-family: 'IBM Plex Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">bin/x64/StreetVendors/*.csv</span><span style="color: var(--muted); white-space: nowrap;">from xip</span></span><span style="font-family: 'IBM Plex Mono', monospace; text-align: right;">2</span>
+        </div>
+      </div>
+    </section>
+  </aside>
+
+  <main style="position: relative; flex-grow: 1; min-width: 0; display: flex; flex-direction: column;">
+    <div style="height: 28px; display: flex; align-items: center; padding: 0 12px; font-size: 12px; font-weight: 500; color: var(--muted);">Shared in this session</div>
+    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+      <thead>
+        <tr style="height: 24px; text-align: left; font-size: 12px; color: var(--muted);">
+          <th scope="col" style="width: 52px; padding: 0 8px 0 12px; font-weight: 400; border-bottom: 1px solid var(--line);">Follow</th>
+          <th scope="col" style="padding: 0 8px; font-weight: 400; border-bottom: 1px solid var(--line);">Mod</th>
+          <th scope="col" style="width: 88px; padding: 0 8px; font-weight: 400; border-bottom: 1px solid var(--line);">Shared by</th>
+          <th scope="col" style="width: 230px; padding: 0 8px; font-weight: 400; border-bottom: 1px solid var(--line);">Status</th>
+          <th scope="col" style="width: 64px; padding: 0 12px 0 8px; font-weight: 400; text-align: right; border-bottom: 1px solid var(--line);">Changed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="height: 26px;">
+          <td style="padding: 0 8px 0 12px;"><label style="display: flex;"><input type="checkbox" checked="checked" aria-label="Follow Street Vendors Plus" style="position: absolute; opacity: 0; width: 1px; height: 1px;"><span style="width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: var(--r); background: var(--accent); color: var(--on-accent);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span></label></td>
+          <td style="padding: 0 8px; color: var(--strong);">Street Vendors+</td>
+          <td style="padding: 0 8px; color: var(--muted);">xip</td>
+          <td style="padding: 0 8px; color: var(--accent);">Restart the game to load it</td>
+          <td style="padding: 0 12px 0 8px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px;">13:41</td>
+        </tr>
+        <tr style="height: 26px; border-top: 1px solid var(--line-soft);">
+          <td style="padding: 0 8px 0 12px;"><label style="display: flex;"><input type="checkbox" checked="checked" aria-label="Follow Neon Signs Overhaul" style="position: absolute; opacity: 0; width: 1px; height: 1px;"><span style="width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: var(--r); background: var(--accent); color: var(--on-accent);"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg></span></label></td>
+          <td style="padding: 0 8px;">Neon Signs Overhaul</td>
+          <td style="padding: 0 8px; color: var(--muted);">xip</td>
+          <td style="padding: 0 8px; color: var(--muted);">Up to date</td>
+          <td style="padding: 0 12px 0 8px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);">12:58</td>
+        </tr>
+        <tr style="height: 26px; border-top: 1px solid var(--line-soft); background: var(--raised); box-shadow: inset 0 0 0 1px var(--accent);">
+          <td style="padding: 0 8px 0 12px;"><label style="display: flex;"><input type="checkbox" aria-label="Follow EquipmentEx" style="position: absolute; opacity: 0; width: 1px; height: 1px;"><span style="width: 12px; height: 12px; border-radius: var(--r); border: 1px solid var(--accent);"></span></label></td>
+          <td style="padding: 0 8px; color: var(--strong);">EquipmentEx</td>
+          <td style="padding: 0 8px; color: var(--muted);">bossun</td>
+          <td style="padding: 0 8px; color: var(--muted);">Not on your PC</td>
+          <td style="padding: 0 12px 0 8px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);">12:44</td>
+        </tr>
+        <tr style="height: 26px; border-top: 1px solid var(--line-soft);">
+          <td style="padding: 0 8px 0 12px;"><label style="display: flex;"><input type="checkbox" aria-label="Follow Better Apartments" style="position: absolute; opacity: 0; width: 1px; height: 1px;"><span style="width: 12px; height: 12px; border-radius: var(--r); border: 1px solid var(--control);"></span></label></td>
+          <td style="padding: 0 8px;">Better Apartments</td>
+          <td style="padding: 0 8px; color: var(--muted);">mira</td>
+          <td style="padding: 0 8px; color: var(--muted);">Not on your PC</td>
+          <td style="padding: 0 12px 0 8px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);">12:30</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div role="dialog" aria-label="Follow EquipmentEx" style="position: absolute; left: 40px; top: 134px; width: 320px; box-sizing: border-box; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; background: var(--raised); border: 1px solid var(--control); border-radius: var(--r); box-shadow: 0 6px 16px rgba(0,0,0,0.4);">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <span style="font-weight: 600; color: var(--strong);">Follow EquipmentEx from bossun?</span>
+        <span style="font-size: 12px; color: var(--muted); line-height: 18px;">It has a DLL, which runs inside your game. Follow only people you trust.</span>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button type="button" style="height: 24px; padding: 0 10px; font: inherit; font-weight: 600; color: var(--on-accent); background: var(--accent); border: 0; border-radius: var(--r);">Follow</button>
+        <button type="button" style="height: 24px; padding: 0 10px; font: inherit; color: var(--text); background: transparent; border: 1px solid var(--control); border-radius: var(--r);">Cancel</button>
+      </div>
+    </div>
+
+    <button type="button" aria-expanded="false" style="margin-top: 16px; height: 28px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; padding: 0 12px; font: inherit; font-size: 12px; color: var(--text); background: transparent; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: left;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+      <span style="font-weight: 500;">Your mods</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; color: var(--muted);">64</span>
+      <span style="color: var(--muted);">Share one with the others</span>
+    </button>
+  </main>
+</div>
+
+<footer style="height: 24px; flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 0 12px; background: var(--panel); border-top: 1px solid var(--line); font-size: 12px; color: var(--muted);">
+  <span>Your logs go to xip</span>
+  <span style="color: var(--accent);">Catching up, 38 of 96 files</span>
+  <div style="flex-grow: 1;"></div>
+  <span>relay.example.net 38ms</span>
+  <span style="font-family: 'IBM Plex Mono', monospace;">0.1.0</span>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1120,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

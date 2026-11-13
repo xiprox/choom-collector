@@ -1,0 +1,29 @@
+[package]
+name = "gpui-spike"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Longbridge GPUI Kit facade: re-exports gpui (as the gpui-pre snapshot), gpui-base,
+# gpui-component and gpui-kit-assets (Lucide icons).
+gpui-kit = "=0.9.1"
+velopack = "=1.2.161"
+async-channel = "2"
+
+# Size-focused release profile (the one we would ship).
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true
+panic = "unwind"
+
+# Same, but z.
+[profile.release-z]
+inherits = "release"
+opt-level = "z"
+
+# Same, but speed-focused.
+[profile.release-o3]
+inherits = "release"
+opt-level = 3
