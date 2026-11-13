@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/xiprox/choom-collector/compare/v0.4.0...v0.4.1) (2026-11-13)
+
+
+### Bug Fixes
+
+* show a tester's own restart or fetching on their row, and color restart and added-folder statuses orange ([5bcd9a0](https://github.com/xiprox/choom-collector/commit/5bcd9a05f724586958367c47671af8e15e43ea01))
+
 ## [0.4.0](https://github.com/xiprox/choom-collector/compare/v0.3.0...v0.4.0) (2026-11-13)
 
 
