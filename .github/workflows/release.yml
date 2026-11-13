@@ -1,0 +1,122 @@
+name: Release
+
+# Every push to main updates release-please's release PR (version bump + changelog, from
+# conventional commits). Merging that PR creates the GitHub release, and the package job then
+# builds both platforms with Velopack and attaches the installers and update packages to it.
+#
+# Run it by hand (Actions → Release → Run workflow) for a dry run: it builds and packs both
+# platforms and keeps the packages as a workflow artifact, without touching any release.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  # Keep in step with the velopack crate's version in Cargo.toml.
+  VPK_VERSION: 1.2.161
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  package:
+    needs: release-please
+    if: >-
+      always() &&
+      (github.event_name == 'workflow_dispatch' || needs.release-please.outputs.created == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Each platform gets its own channel, so the two never overwrite each other's files
+          # on the shared release (a non-default channel is part of every file name).
+          - os: windows-latest
+            channel: win-x64
+            exe: choomlink.exe
+          - os: ubuntu-22.04
+            channel: linux-x64
+            exe: choomlink
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      CHANNEL: ${{ matrix.channel }}
+      TAG: ${{ needs.release-please.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            base=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+            echo "VERSION=$base-dryrun.${{ github.run_number }}" >> "$GITHUB_ENV"
+          else
+            echo "VERSION=${{ needs.release-please.outputs.version }}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build
+        run: |
+          cargo build --release --locked
+          mkdir -p publish
+          cp "target/release/${{ matrix.exe }}" publish/
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk --version "$VPK_VERSION"
+
+      # Delta packages are made against the previous release's full package, so fetch it
+      # first. The newest release is the one just created, still empty, so this looks for
+      # the newest published release other than it.
+      - name: Fetch the previous release
+        if: github.event_name == 'push'
+        run: |
+          mkdir -p Releases
+          prev=$(gh release list --exclude-drafts --json tagName --jq '.[].tagName' | grep -vxF "$TAG" | head -n 1 || true)
+          if [ -n "$prev" ]; then
+            echo "Previous release: $prev"
+            gh release download "$prev" -D Releases \
+              -p "releases.$CHANNEL.json" -p "*-$CHANNEL-full.nupkg" || echo "No $CHANNEL packages in $prev"
+          else
+            echo "First release: no delta packages."
+          fi
+
+      - name: Pack
+        run: |
+          vpk pack -u choomlink --packTitle Choomlink -v "$VERSION" \
+            -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases
+
+      - name: Attach to the release
+        if: github.event_name == 'push'
+        run: |
+          vpk upload github --repoUrl "${{ github.server_url }}/${{ github.repository }}" \
+            --token "$GH_TOKEN" -c "$CHANNEL" -o Releases --merge --tag "$TAG"
+
+      - name: Keep the dry run's packages
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.channel }}
+          path: Releases/

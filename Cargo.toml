@@ -1,0 +1,16 @@
+[package]
+name = "choomlink"
+version = "0.1.0"
+edition = "2024"
+description = "Play Cyberpunk 2077 together: everyone's logs in one place, and mods shared between friends."
+publish = false
+
+[dependencies]
+# Installs, updates (with delta packages) and uninstalls. Keep in step with VPK_VERSION in
+# .github/workflows/release.yml, as the packages vpk makes are read by this crate.
+velopack = "=1.2.161"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
