@@ -5,7 +5,7 @@ Decided by the user on 2026-11-13, after a spike that built the controls the app
 
 ## Context
 
-The window needs a table of mods with checkboxes, tooltips, text inputs, and state that background threads change every second, on Windows and on Linux, the Steam Deck included.
+The window needs a table of mods with checkboxes, tooltips, text inputs, and state that background threads change every second, on Windows and on Linux.
 The user wanted a desktop app that feels like a professional tool, and ruled out a web view: "yes, no tauri" (user, 2026-11-13).
 
 ## Options
@@ -30,4 +30,4 @@ The spike built every control the app needs on Windows with `gpui-kit` 0.9.1, wh
 - `gpui-kit` and `gpui-pre` are pinned to exact versions and updated on purpose, since the crate moves faster than its own docs: its README describes 0.7 while the crate is 0.9.1 (read 2026-11-13).
 - Zed's own `ui`, `theme`, and `settings` crates are GPL-3.0-or-later, so nothing is copied from them; gpui, gpui-component, and `gpui-kit` are Apache-2.0 (read in their `Cargo.toml` files, 2026-11-13).
 - A release build takes about 4 minutes from clean on the development machine, so day-to-day work uses the dev profile.
-- A Linux build links fontconfig, freetype, xkbcommon, X11, and xcb, and loads Wayland, EGL, and Vulkan at run time (read in the spike's dependencies; the Linux build is unverified), so CI installs their development packages and the AppImage needs a check on a Steam Deck.
+- A Linux build links fontconfig, freetype, xkbcommon, X11, and xcb, and loads Wayland, EGL, and Vulkan at run time (read in the spike's dependencies; the Linux build is unverified), so CI installs their development packages; the AppImage itself is unverified on a real Linux desktop, since nobody in the user's group plays on Linux (user, 2026-11-13).

@@ -52,14 +52,16 @@ Exit: in a test session, a file the sharer saves is in a follower's copy within 
 
 Done on 2026-11-13 ([mods log](../mods/log.md#2026-11-13-in-a-real-session-a-saved-file-reached-the-follower-in-205s-and-a-held-one-landed-034s-after-it-was-let-go)).
 
-## 7. Settings, updates, and Linux
+## 7. Settings and updates
 
-The Settings window, Velopack's update check, the app's own log, and the AppImage on the user's Steam Deck.
+The Settings window, Velopack's update check, and the app's own log.
 
-Exit: a Windows install from one release updates itself to the next, and the AppImage joins a session on the user's Steam Deck.
+Exit: a Windows install from one release updates itself to the next.
 
-Built on 2026-11-13: the Settings page, the update check and its button, and the app's log ([interface log](../interface/log.md#2026-11-13-settings-and-the-update-button-went-straight-into-the-window-with-no-frames-first)).
-The Windows half of the exit passed on 2026-11-13, an installed 0.2.0 updating itself to 0.3.0 ([build log](../build/log.md#2026-11-13-an-installed-020-found-030-by-itself-built-it-from-the-delta-and-restarted-into-it-in-3s)); the Steam Deck half waits for the user.
+- **Dropped:** an AppImage joining a session on a Steam Deck, which this plan first asked for from CP77 Log Collector's support for Steam Deck desktop mode (read in CP77 Log Collector, README.md), until the user said nobody in their group plays on Linux or a Deck (2026-11-13).
+  The Linux build stays, and CI builds it and runs every test on it, but it's unverified on a real Linux desktop.
+
+Done on 2026-11-13 ([build log](../build/log.md#2026-11-13-an-installed-020-found-030-by-itself-built-it-from-the-delta-and-restarted-into-it-in-3s)).
 
 ## 8. A session with friends
 

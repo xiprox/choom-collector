@@ -146,6 +146,7 @@ What following replaces or deletes, or unfollowing deletes, goes to the backups 
 ## Updates and platforms
 
 - The app updates itself from the project's GitHub releases with Velopack, delta packages included ([decision 004](../../decisions/004-releases-with-release-please-and-velopack.md)).
-- Windows 10 and 11 on x64, and Linux on x64, the Steam Deck's desktop mode included.
+- Windows 10 and 11 on x64, and Linux on x64.
+  CI builds Linux and runs every test on it, but no release has run on a real Linux desktop or a Steam Deck, since nobody in the user's group plays on Linux (user, 2026-11-13).
 - On Linux the app finds the game in every Steam library, for native, Flatpak, and Snap Steam, and in Heroic and Lutris installs (read in CP77 Log Collector, README.md, "Linux").
 - TBD: whether v1 keeps CP77 Log Collector's mode without a window (`--nogui`), which it offers for Linux PCs missing X11 libraries; the user hasn't said.
