@@ -1,5 +1,18 @@
 # Network log
 
+## 2026-11-13: The relay runs on the user's Cloudflare account, and passes the same tests there as under wrangler dev
+
+We asked whether the relay, deployed to Cloudflare as `relay/README.md` describes, behaves as it does under `wrangler dev`, now that sessions with friends need one they can reach.
+We expected it to, since `wrangler dev` runs the same Worker and Durable Object code, and the free plan's SQLite Durable Objects and rate limit to deploy without changes.
+
+`wrangler deploy` from `relay/` uploaded 6.45 KiB with the `SESSIONS` Durable Object and the `JOIN_LIMIT` rate limit of 20 a minute, to the user's account on its `workers.dev` subdomain (measured on 2026-11-13):
+
+- A plain HTTPS request to it got 426 Upgrade Required, as the Worker answers anything that isn't a WebSocket.
+- `COOP_TEST_RELAY` pointed at it, `cargo test -p coop-core --test relay -- --ignored` passed all 3 tests in 4.49s: a host and two testers exchanging messages, a code nobody hosts, and a host that returns within 30s keeping its testers.
+- A host and a tester ran from the debug build with the address entered as a player would, with no scheme; the title bar showed 18ms to the relay, logs reached "Up to date", and a line the host saved into a followed mod was in the tester's copy 1.53s later.
+
+The address stays out of this repository, which is public, since it's the user's own relay on their free plan; players get it in the invite.
+
 ## 2026-11-13: A host and two testers on one PC find each other, and a restarted tester rejoins in its own place
 
 We asked whether the session, as [relay and sessions](01-relay-and-sessions.md) describes it, works end to end through the relay: hosting and joining on start, `Hello` and `Welcome`, the players list, and a tester's restart.
