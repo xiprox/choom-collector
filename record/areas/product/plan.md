@@ -10,6 +10,8 @@ The record, the Cargo workspace with the crates [the spine](../architecture/01-s
 
 Exit: CI builds Windows and Linux from `main`, and the program opens an empty window on Windows.
 
+Done on 2026-11-13: CI built both platforms for commit 8da57bc, gpui's Linux packages included, and `tools/capture-window.ps1` pictured the empty window.
+
 ## 2. The window, on made-up data
 
 The theme and every screen of [the interface decisions](../interface/decisions.md), fed by `--demo`, a made-up session that shows the states the frames show, and `--data-dir <folder>`.
@@ -31,6 +33,8 @@ Done on 2026-11-13: `src/core/tests/relay.rs` passes against the fork ([network 
 Settings, the first run, hosting and joining on start, players and their state, and reconnecting, with the window on real state.
 
 Exit: on one PC, a host and two testers, each with their own data folder, see each other in the window, and a tester that restarts rejoins with no action.
+
+Done on 2026-11-13 ([network log](../network/log.md#2026-11-13-a-host-and-two-testers-on-one-pc-find-each-other-and-a-restarted-tester-rejoins-in-its-own-place)).
 
 ## 5. Logs
 

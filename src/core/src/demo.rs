@@ -317,6 +317,7 @@ fn session(role: Role) -> Session {
         } else {
             LogsLine::Tester { host: "xip".into(), sending: Sending::CatchingUp { done: 38, total: 96 } }
         },
+        problem: None,
     }
 }
 

@@ -3,7 +3,10 @@
 //! drawing the [`state::Snapshot`]s it sends back.
 
 pub mod demo;
+pub mod game;
 pub mod relay;
+mod session;
+pub mod settings;
 pub mod state;
 
 use std::path::PathBuf;
@@ -18,12 +21,15 @@ pub struct Options {
     pub data_dir: Option<PathBuf>,
     /// A made-up session instead of a real one.
     pub demo: Option<DemoScreen>,
+    /// The name to show up as instead of the Steam name, for test runs of several copies on one PC.
+    pub name: Option<String>,
 }
 
 /// Starts the core, and returns the channel the window sends commands on and the channel it
 /// receives snapshots from.
 pub fn start(options: Options) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
-    // Until stage 4 of record/areas/product/plan.md builds the real session, every run is a demo,
-    // and a run without --demo starts at the first run's setup.
-    demo::start(options.demo.unwrap_or(DemoScreen::SetupJoin), options.app_version)
+    match options.demo {
+        Some(screen) => demo::start(screen, options.app_version),
+        None => session::start(options.data_dir.unwrap_or_else(settings::default_data_dir), options.app_version, options.name),
+    }
 }

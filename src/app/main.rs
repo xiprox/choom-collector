@@ -19,21 +19,24 @@ Usage: cyberpunk-coop-tools [options]
 
   --data-dir <folder>   keep settings, the app's log, and backups in this folder
   --demo <screen>       show a made-up session: host, tester, setup-join, or setup-host
+  --name <name>         show up as this name, for test runs of several copies on one PC
   --help                show this
 ";
 
 struct Args {
     data_dir: Option<PathBuf>,
     demo: Option<coop_core::DemoScreen>,
+    name: Option<String>,
 }
 
 fn parse_args() -> Result<Args, String> {
-    let mut args = Args { data_dir: None, demo: None };
+    let mut args = Args { data_dir: None, demo: None, name: None };
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--data-dir" => args.data_dir = Some(it.next().ok_or("--data-dir needs a folder")?.into()),
             "--demo" => args.demo = Some(it.next().ok_or("--demo needs a screen")?.parse()?),
+            "--name" => args.name = Some(it.next().ok_or("--name needs a name")?),
             "--help" | "-h" => return Err(String::new()),
             other => return Err(format!("unknown option {other:?}")),
         }
@@ -60,6 +63,7 @@ fn main() -> ExitCode {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
         data_dir: args.data_dir,
         demo: args.demo,
+        name: args.name,
     });
 
     gpui_kit::application().with_assets(assets::Assets).run(move |cx: &mut App| {

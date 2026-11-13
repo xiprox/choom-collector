@@ -60,6 +60,7 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 | --- | --- |
 | `--data-dir <folder>` | Uses this data folder instead of the usual one. |
 | `--demo` | Runs a made-up session that shows the states the frames show, without a relay. |
+| `--name <name>` | Shows up as this name instead of the Steam name, for test runs of several copies on one PC. |
 
 `tools/capture-window.ps1` starts the program with any of these, saves a picture of its window, and closes it, without taking the focus, so layout checks run on Windows while someone uses the PC.
 

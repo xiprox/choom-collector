@@ -60,6 +60,10 @@ impl AppView {
         }
     }
 
+    pub fn commands(&self) -> async_channel::Sender<Command> {
+        self.commands.clone()
+    }
+
     pub fn send(&self, command: Command) {
         // The core only stops with the app, so a failed send has nobody left to tell.
         let _ = self.commands.try_send(command);

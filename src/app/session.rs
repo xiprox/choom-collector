@@ -33,6 +33,22 @@ impl AppView {
         v_flex()
             .size_full()
             .child(self.title_bar(s, cx))
+            .when_some(s.problem.clone(), |v, problem| {
+                v.child(
+                    h_flex()
+                        .h(SECTION)
+                        .flex_shrink_0()
+                        .px(px(12.))
+                        .gap(px(8.))
+                        .bg(color(PANEL))
+                        .border_b_1()
+                        .border_color(color(LINE))
+                        .text_size(SMALL_SIZE)
+                        .text_color(color(TROUBLE))
+                        .child(icon(IconName::CircleAlert, TROUBLE))
+                        .child(div().truncate().child(problem)),
+                )
+            })
             .when_some(note, |v, note| {
                 v.child(
                     h_flex()
@@ -193,7 +209,10 @@ impl AppView {
                     .child(row("Game", text(format!("{}, {}", p.game_version, p.store), if off_version { WARNING } else { TEXT })))
                     .child(row("System", text(p.system.clone(), TEXT)))
                     .child(row("Joined", text(joined, TEXT)))
-                    .child(row(bytes_key, div().font_family(mono_family.clone()).child(bytes(p.bytes)).into_any_element())),
+                    .child(row(
+                        bytes_key,
+                        if p.bytes == 0 { text("Nothing yet".into(), MUTED) } else { div().font_family(mono_family.clone()).child(bytes(p.bytes)).into_any_element() },
+                    )),
             )
             .when_some(sources, |v, s| v.child(s))
             .into_any_element()
@@ -457,10 +476,13 @@ impl AppView {
         let logs: AnyElement = match &s.logs {
             LogsLine::Host { folder } => {
                 let (copy, open) = (folder.clone(), folder.clone());
+                // A long path gives way, so the relay and the version always show.
                 h_flex()
+                    .flex_1()
+                    .min_w_0()
                     .gap(px(6.))
-                    .child("Logs go to")
-                    .child(mono(cx, folder.display().to_string()).text_color(color(TEXT)))
+                    .child(div().flex_shrink_0().child("Logs go to"))
+                    .child(mono(cx, folder.display().to_string()).min_w_0().truncate().text_color(color(TEXT)))
                     .child(
                         icon_button("copy-path", IconName::Copy, TEXT)
                             .size(px(20.))
@@ -477,11 +499,12 @@ impl AppView {
             }
             LogsLine::Tester { host, sending } => {
                 let (words, hex) = match sending {
+                    Sending::Idle => (String::new(), MUTED),
                     Sending::CatchingUp { done, total } => (format!("Catching up, {done} of {total} files"), ACCENT),
                     Sending::UpToDate => ("Up to date".to_string(), MUTED),
                     Sending::Paused => ("Paused while reconnecting".to_string(), WARNING),
                 };
-                h_flex().gap(px(12.)).child(format!("Your logs go to {host}")).child(div().text_color(color(hex)).child(words)).into_any_element()
+                h_flex().flex_1().min_w_0().gap(px(12.)).child(format!("Your logs go to {host}")).child(div().text_color(color(hex)).child(words)).into_any_element()
             }
         };
         h_flex()
@@ -495,9 +518,8 @@ impl AppView {
             .text_size(SMALL_SIZE)
             .text_color(color(MUTED))
             .child(logs)
-            .child(div().flex_1())
-            .child(latency)
-            .child(mono(cx, version.to_string()))
+            .child(div().flex_shrink_0().child(latency))
+            .child(mono(cx, version.to_string()).flex_shrink_0())
             .into_any_element()
     }
 }

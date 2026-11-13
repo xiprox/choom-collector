@@ -3,6 +3,9 @@
 #
 #   tools/capture-window.ps1 -Out shot.png [-AppArgs "--demo host"] [-Click "298,177"] [-Hover "865,97"]
 #                            [-Exe target/debug/cyberpunk-coop-tools.exe] [-Wait 2]
+#   tools/capture-window.ps1 -Out shot.png -ProcessId 1234
+#
+# -ProcessId pictures a copy that's already running, and leaves it running.
 #
 # -Click and -Hover take a point in the window's client area, in pixels at its DPI, and act there
 # with posted mouse messages before the picture, so the real mouse never moves.
@@ -16,7 +19,8 @@ param(
     [string]$Title = 'Cyberpunk Co-op Tools',
     [string]$AppArgs = '',
     [string]$Click = '',
-    [string]$Hover = ''
+    [string]$Hover = '',
+    [int]$ProcessId = 0
 )
 
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
@@ -86,6 +90,13 @@ public static class CoopCapture {
 }
 "@
 [CoopCapture]::DpiAware()
+
+if ($ProcessId) {
+    $h = [CoopCapture]::Find([uint32]$ProcessId, $Title)
+    if ($h -eq [IntPtr]::Zero) { throw "Process $ProcessId has no window titled '$Title'." }
+    [CoopCapture]::Capture($h, [IO.Path]::GetFullPath($Out))
+    return
+}
 
 $start = @{ FilePath = (Resolve-Path $Exe).Path; PassThru = $true }
 if ($AppArgs) { $start.ArgumentList = $AppArgs }

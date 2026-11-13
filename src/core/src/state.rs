@@ -56,6 +56,9 @@ pub struct Session {
     pub shared: Vec<SharedMod>,
     pub my_mods: Vec<MyMod>,
     pub logs: LogsLine,
+    /// Something keeping the session from working, in words for the player, such as another host
+    /// holding the code.
+    pub problem: Option<String>,
 }
 
 impl Session {
@@ -87,6 +90,8 @@ pub enum LogsLine {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Sending {
+    /// Nothing to say yet, such as before the host has answered.
+    Idle,
     CatchingUp { done: u32, total: u32 },
     UpToDate,
     Paused,
@@ -261,6 +266,8 @@ pub enum Command {
     TakeAddedFolder { key: String },
     FinishSetup(SetupAnswers),
     NewCode,
+    SetGameFolder(PathBuf),
+    SetLogsFolder(PathBuf),
     Stop,
     Leave,
 }

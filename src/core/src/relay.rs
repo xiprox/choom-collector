@@ -5,6 +5,8 @@
 use anyhow::{Context as _, Result, anyhow, bail};
 use futures_util::{SinkExt as _, StreamExt as _};
 use serde::Deserialize;
+use std::time::Instant;
+
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
@@ -104,6 +106,8 @@ pub enum TesterEvent {
 /// The host's socket to its relay.
 pub struct HostLink {
     socket: Socket,
+    pinged: Option<Instant>,
+    latency_ms: Option<u32>,
     /// What proves to the relay, after a drop, that this is the same host.
     pub resume: String,
 }
@@ -117,7 +121,7 @@ impl HostLink {
         }
         let (mut socket, _) = connect_async(&address).await.map_err(|e| refused(e, "host"))?;
         match next_control(&mut socket).await? {
-            Control::Hosting { resume } => Ok(Self { socket, resume }),
+            Control::Hosting { resume } => Ok(Self { socket, resume, pinged: None, latency_ms: None }),
             _ => bail!("the relay answered hosting with something other than a session"),
         }
     }
@@ -160,6 +164,11 @@ impl HostLink {
                     }
                     _ => {}
                 },
+                Message::Pong(_) => {
+                    if let Some(ms) = took(self.pinged.take()) {
+                        self.latency_ms = Some(ms);
+                    }
+                }
                 Message::Close(_) => break,
                 _ => {}
             }
@@ -177,6 +186,8 @@ impl HostLink {
 /// A tester's socket to the host's relay.
 pub struct TesterLink {
     socket: Socket,
+    pinged: Option<Instant>,
+    latency_ms: Option<u32>,
     pub id: TesterId,
 }
 
@@ -185,7 +196,7 @@ impl TesterLink {
         let address = format!("{}/join?code={code}", socket_address(relay));
         let (mut socket, _) = connect_async(&address).await.map_err(|e| refused(e, "join"))?;
         match next_control(&mut socket).await? {
-            Control::Joined { guest_id } => Ok(Self { socket, id: parse_id(&guest_id)? }),
+            Control::Joined { guest_id } => Ok(Self { socket, id: parse_id(&guest_id)?, pinged: None, latency_ms: None }),
             _ => bail!("the relay answered joining with something other than a place in the session"),
         }
     }
@@ -205,6 +216,11 @@ impl TesterLink {
                     }
                 }
                 Message::Close(Some(frame)) if !frame.reason.is_empty() => return TesterEvent::Ended(frame.reason.to_string()),
+                Message::Pong(_) => {
+                    if let Some(ms) = took(self.pinged.take()) {
+                        self.latency_ms = Some(ms);
+                    }
+                }
                 Message::Close(_) => break,
                 _ => {}
             }
@@ -215,6 +231,30 @@ impl TesterLink {
     pub async fn leave(mut self) {
         let _ = self.socket.close(None).await;
     }
+}
+
+macro_rules! latency {
+    ($link:ty) => {
+        impl $link {
+            /// Sends a WebSocket ping, which the relay answers by itself; `next` times the pong.
+            pub async fn ping(&mut self) -> Result<()> {
+                self.pinged = Some(Instant::now());
+                self.socket.send(Message::Ping(Vec::new().into())).await?;
+                Ok(())
+            }
+
+            /// The time the last ping took to come back, once one has.
+            pub fn latency_ms(&self) -> Option<u32> {
+                self.latency_ms
+            }
+        }
+    };
+}
+latency!(HostLink);
+latency!(TesterLink);
+
+fn took(pinged: Option<Instant>) -> Option<u32> {
+    pinged.map(|t| t.elapsed().as_millis().min(u32::MAX as u128) as u32)
 }
 
 /// Reads the relay's first frame on a socket: its answer to `/host` or `/join`.

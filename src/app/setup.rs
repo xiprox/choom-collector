@@ -47,11 +47,13 @@ impl AppView {
             v_flex().gap(px(6.)).child(label(label_text)).child(control).child(helper)
         };
         let helper = |text: String| div().text_size(SMALL_SIZE).text_color(color(MUTED)).child(text).into_any_element();
-        let path_row = |id: &'static str, path: String| {
+        let change_game = outline_button("change-game", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_folder(true, cx)));
+        let change_logs = outline_button("change-logs", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_folder(false, cx)));
+        let path_row = |path: String, change: Stateful<Div>| {
             h_flex()
                 .gap(px(8.))
                 .child(mono(cx, path).flex_1().min_w_0().truncate())
-                .child(outline_button(id, "Change"))
+                .child(change)
                 .into_any_element()
         };
 
@@ -66,7 +68,7 @@ impl AppView {
                 ))
                 .child(field(
                     "Game",
-                    path_row("change-game", game.map(|g| g.folder.display().to_string()).unwrap_or_else(|| "Not found".into())),
+                    path_row(game.map(|g| g.folder.display().to_string()).unwrap_or_else(|| "Not found".into()), change_game),
                     helper(game_line),
                 ))
                 .child(
@@ -104,7 +106,7 @@ impl AppView {
                 ))
                 .child(field(
                     "Logs go to",
-                    path_row("change-logs", setup.logs_folder.display().to_string()),
+                    path_row(setup.logs_folder.display().to_string(), change_logs),
                     helper("A folder per session, a folder per player inside it".into()),
                 ))
                 .child(
@@ -159,6 +161,20 @@ impl AppView {
                 ),
             )
             .into_any_element()
+    }
+
+    /// Asks the system for a folder, the game's or the logs', and tells the core.
+    fn pick_folder(&mut self, game: bool, cx: &mut Context<Self>) {
+        let picked = cx.prompt_for_paths(PathPromptOptions { files: false, directories: true, multiple: false, prompt: None });
+        let commands = self.commands();
+        cx.spawn(async move |_, _| {
+            if let Ok(Ok(Some(mut paths))) = picked.await
+                && let Some(path) = paths.pop()
+            {
+                let _ = commands.send(if game { Command::SetGameFolder(path) } else { Command::SetLogsFolder(path) }).await;
+            }
+        })
+        .detach();
     }
 
     fn finish_setup(&mut self, role: Role, cx: &mut Context<Self>) {
