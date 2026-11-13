@@ -414,10 +414,10 @@ impl AppView {
             let (words, hex) = match &m.status {
                 ModStatus::UpToDate => ("Up to date".to_string(), MUTED),
                 ModStatus::Fetching { done, total } => (format!("Fetching {done} of {total} files"), PROGRESS),
-                ModStatus::NeedsRestart => ("Restart the game to load it".to_string(), ACCENT),
+                ModStatus::NeedsRestart => ("Restart the game to load it".to_string(), WARNING),
                 ModStatus::Held => ("Waiting for a program to let go of the old files".to_string(), WARNING),
                 ModStatus::NotOnYourPc => ("Not on your PC".to_string(), MUTED),
-                ModStatus::AddedFolder => ("Added a folder, tick to take it".to_string(), ACCENT),
+                ModStatus::AddedFolder => ("Added a folder, tick to take it".to_string(), WARNING),
                 ModStatus::Paused => ("Paused while reconnecting".to_string(), MUTED),
                 ModStatus::Checking => ("Checking your copy".to_string(), MUTED),
                 ModStatus::OnYourPc { same: true } => ("Yours is the same".to_string(), MUTED),
@@ -663,12 +663,15 @@ fn empty_note(words: &'static str) -> AnyElement {
 /// A player row's one line of state, and its color; `None` when there's nothing to say.
 fn player_state(s: &Session, p: &Player, host_version: Option<&str>) -> (Option<String>, u32) {
     let off_version = host_version.is_some_and(|hv| hv != p.game_version);
-    match (&p.state, s.role) {
-        (PlayerState::Reconnecting, _) => (Some("Reconnecting".into()), WARNING),
-        (PlayerState::NeedsRestart, Role::Host) if off_version => (Some(format!("Game {}, needs a restart", p.game_version)), WARNING),
-        (PlayerState::NeedsRestart, Role::Host) => (Some("Needs a restart".into()), WARNING),
-        (PlayerState::Held, Role::Host) => (Some("Waiting for a program".into()), WARNING),
-        (PlayerState::Fetching { done, total }, Role::Host) => (Some(format!("Fetching {done} of {total}")), PROGRESS),
+    // The host sees every player's state; a tester sees their own, which their row would otherwise
+    // hide behind "You".
+    let sees = s.role == Role::Host || p.is_me;
+    match &p.state {
+        PlayerState::Reconnecting => (Some("Reconnecting".into()), WARNING),
+        PlayerState::NeedsRestart if sees && off_version => (Some(format!("Game {}, needs a restart", p.game_version)), WARNING),
+        PlayerState::NeedsRestart if sees => (Some("Needs a restart".into()), WARNING),
+        PlayerState::Held if sees => (Some("Waiting for a program".into()), WARNING),
+        PlayerState::Fetching { done, total } if sees => (Some(format!("Fetching {done} of {total}")), PROGRESS),
         _ if p.is_host && p.is_me => (Some("You, hosting".into()), MUTED),
         _ if p.is_host => (Some("Hosting".into()), MUTED),
         _ if p.is_me => (Some("You".into()), MUTED),
