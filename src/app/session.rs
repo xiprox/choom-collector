@@ -92,6 +92,8 @@ impl AppView {
             (Link::Connected { .. }, Role::Tester) => (format!("Hosted by {}", s.host_name), MUTED),
         };
         let invite = format!("{}/{}", s.relay, code(&s.code));
+        let tip = format!("Copy the invite, {invite}");
+        let copied = self.copied_invite;
         TitleBar::new()
             .h(TITLE_BAR)
             .bg(color(PANEL))
@@ -99,7 +101,23 @@ impl AppView {
                 h_flex()
                     .gap(px(8.))
                     .child(mark(px(14.)))
-                    .child(mono(cx, code(&s.code)).text_size(TEXT_SIZE).font_weight(FontWeight::MEDIUM).text_color(color(STRONG)))
+                    .child(
+                        h_flex()
+                            .gap(px(2.))
+                            .child(mono(cx, code(&s.code)).text_size(TEXT_SIZE).font_weight(FontWeight::MEDIUM).text_color(color(STRONG)))
+                            // Only the host hands out the invite; a tester has nobody to send it to.
+                            .when(s.role == Role::Host, |r| {
+                                r.child(
+                                    icon_button("copy-invite", if copied { IconName::Check } else { IconName::Copy }, if copied { ACCENT } else { MUTED })
+                                        .size(px(20.))
+                                        .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
+                                        .on_click(cx.listener(move |view, _, _, cx| {
+                                            cx.write_to_clipboard(ClipboardItem::new_string(invite.clone()));
+                                            view.flash_copied(cx);
+                                        })),
+                                )
+                            }),
+                    )
                     .child(div().text_color(color(state.1)).child(state.0)),
             )
             .child(
@@ -117,12 +135,7 @@ impl AppView {
                         )
                     })
                     .when(s.role == Role::Host, |b| {
-                        b.child(
-                            plain_button("copy-invite", "Copy invite", Some(IconName::Copy))
-                                .tooltip(|window, cx| Tooltip::new("Copy the invite to send to testers").build(window, cx))
-                                .on_click(move |_, _, cx| cx.write_to_clipboard(ClipboardItem::new_string(invite.clone()))),
-                        )
-                        .child(plain_button("stop", "Stop", None).on_click(cx.listener(|view, _, _, _| view.send(Command::Stop))))
+                        b.child(plain_button("stop", "Stop", None).on_click(cx.listener(|view, _, _, _| view.send(Command::Stop))))
                     })
                     .when(s.role == Role::Tester, |b| {
                         b.child(plain_button("leave", "Leave", None).on_click(cx.listener(|view, _, _, _| view.send(Command::Leave))))
@@ -264,6 +277,13 @@ impl AppView {
         };
 
         let my_mods = self.my_mods(s, cx);
+        let empty = rows.is_empty().then(|| {
+            let words = match s.role {
+                Role::Host => "Nothing's shared yet. Tick a mod under Your mods to send it to everyone who follows it.",
+                Role::Tester => "Nothing's shared yet. When someone shares a mod, it shows here for you to follow.",
+            };
+            empty_note(words)
+        });
 
         div()
             .id("mods")
@@ -272,8 +292,10 @@ impl AppView {
             .relative()
             .overflow_y_scroll()
             .child(h_flex().h(SECTION).px(px(12.)).child(label("Shared in this session")))
-            .child(header)
+            // With nothing shared, the columns have nothing to name.
+            .when(empty.is_none(), |d| d.child(header))
             .children(rows)
+            .children(empty)
             .child(my_mods)
             .when_some(question, |d, q| d.child(q))
             .into_any_element()
@@ -493,7 +515,8 @@ impl AppView {
             }).collect::<Vec<_>>()
         });
 
-        v_flex().child(toggle).when_some(rows, |v, rows| v.children(rows)).into_any_element()
+        let empty = (open && s.my_mods.is_empty()).then(|| empty_note("No mods in your game's mod folders yet."));
+        v_flex().child(toggle).when_some(rows, |v, rows| v.children(rows)).children(empty).into_any_element()
     }
 
     fn status_bar(&self, s: &Session, version: &str, cx: &mut Context<Self>) -> AnyElement {
@@ -504,23 +527,29 @@ impl AppView {
         let logs: AnyElement = match &s.logs {
             LogsLine::Host { folder } => {
                 let (copy, open) = (folder.clone(), folder.clone());
+                // The bar names the logs folder the host chose; the session's own folder inside it
+                // is named after the date and the code the title bar already shows, and the buttons
+                // act on it.
+                let shown = folder.parent().unwrap_or(folder).display().to_string();
+                let name = folder.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+                let (copy_tip, open_tip) = (format!("Copy the path of this session's folder, {name}"), format!("Open this session's folder, {name}"));
                 // A long path gives way, so the relay and the version always show.
                 h_flex()
                     .flex_1()
                     .min_w_0()
                     .gap(px(6.))
                     .child(div().flex_shrink_0().child("Logs go to"))
-                    .child(mono(cx, folder.display().to_string()).min_w_0().truncate().text_color(color(TEXT)))
+                    .child(mono(cx, shown).min_w_0().truncate())
                     .child(
-                        icon_button("copy-path", IconName::Copy, TEXT)
+                        icon_button("copy-path", IconName::Copy, MUTED)
                             .size(px(20.))
-                            .tooltip(|window, cx| Tooltip::new("Copy the path").build(window, cx))
+                            .tooltip(move |window, cx| Tooltip::new(copy_tip.clone()).build(window, cx))
                             .on_click(move |_, _, cx| cx.write_to_clipboard(ClipboardItem::new_string(copy.display().to_string()))),
                     )
                     .child(
-                        icon_button("open-folder", IconName::Folder, TEXT)
+                        icon_button("open-folder", IconName::Folder, MUTED)
                             .size(px(20.))
-                            .tooltip(|window, cx| Tooltip::new("Open the folder").build(window, cx))
+                            .tooltip(move |window, cx| Tooltip::new(open_tip.clone()).build(window, cx))
                             .on_click(move |_, _, cx| cx.open_with_system(&open)),
                     )
                     .into_any_element()
@@ -550,6 +579,11 @@ impl AppView {
             .child(mono(cx, version.to_string()).flex_shrink_0())
             .into_any_element()
     }
+}
+
+/// What a list says when it has no rows, in muted text where its first row would be.
+fn empty_note(words: &'static str) -> AnyElement {
+    div().px(px(12.)).py(px(8.)).text_color(color(MUTED)).child(words).into_any_element()
 }
 
 /// A player row's one line of state, and its color; `None` when there's nothing to say.

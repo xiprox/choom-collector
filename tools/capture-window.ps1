@@ -9,7 +9,9 @@
 # running.
 #
 # -Click and -Hover take a point in the window's client area, in pixels at its DPI, and act there
-# with posted mouse messages before the picture, so the real mouse never moves.
+# with posted mouse messages before the picture, so the real mouse never moves. Posted messages skip
+# Windows' hit test, which decides whether a real click reaches the app or grabs the title bar, so
+# -HitTest "x,y;x,y" asks Windows about each point and prints the answer.
 #
 # PrintWindow with PW_RENDERFULLCONTENT draws the window even when other windows cover it, and the
 # picture is the client area only, at the window's own DPI.
@@ -21,6 +23,7 @@ param(
     [string]$AppArgs = '',
     [string]$Click = '',
     [string]$Hover = '',
+    [string]$HitTest = '',
     [int]$ProcessId = 0
 )
 
@@ -79,6 +82,15 @@ public static class CoopCapture {
         }
     }
 
+    [DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr h, uint msg, IntPtr w, IntPtr l);
+
+    /// What Windows makes of a real pointer at a client point: 1 is the app's own area, 2 the title
+    /// bar's drag area, which a click there never reaches the app through.
+    public static int HitTest(IntPtr h, int x, int y) {
+        POINT p = new POINT(); p.X = x; p.Y = y; ClientToScreen(h, ref p);
+        return SendMessage(h, 0x0084, IntPtr.Zero, new IntPtr((p.Y << 16) | (p.X & 0xFFFF))).ToInt32();
+    }
+
     public static void Close(IntPtr h) { PostMessage(h, 0x0010, IntPtr.Zero, IntPtr.Zero); }
 
     static IntPtr XY(int x, int y) { return new IntPtr((y << 16) | (x & 0xFFFF)); }
@@ -94,6 +106,19 @@ public static class CoopCapture {
 
 # Clicks and rests the pointer as -Click and -Hover ask, before the picture.
 function Invoke-Pointer([IntPtr]$h) {
+    # Posted clicks skip Windows' hit test, so -HitTest asks it directly for each point first.
+    foreach ($point in ($HitTest -split ';' | Where-Object { $_ })) {
+        $x, $y = $point -split ',' | ForEach-Object { [int]$_ }
+        # gpui answers from the element under the pointer as of an earlier move, so the pointer moves
+        # there twice first.
+        [CoopCapture]::Move($h, $x, $y)
+        Start-Sleep -Milliseconds 200
+        [CoopCapture]::Move($h, $x, $y)
+        Start-Sleep -Milliseconds 200
+        $code = [CoopCapture]::HitTest($h, $x, $y)
+        $name = switch ($code) { 1 { 'the app' } 2 { 'the title bar (a click never reaches the app)' } default { "hit test $code" } }
+        "hit test at ${x},${y}: $name"
+    }
     if ($Click) {
         $x, $y = $Click -split ',' | ForEach-Object { [int]$_ }
         [CoopCapture]::Click($h, $x, $y)

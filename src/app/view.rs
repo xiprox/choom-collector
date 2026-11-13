@@ -31,6 +31,8 @@ pub struct AppView {
     setup_filled: bool,
     pub settings_open: bool,
     pub settings: SettingsForm,
+    /// The invite was just copied, so its button shows a check for a moment.
+    pub copied_invite: bool,
     _snapshots: Task<()>,
 }
 
@@ -65,12 +67,27 @@ impl AppView {
             setup_filled: false,
             settings_open: false,
             settings,
+            copied_invite: false,
             _snapshots: task,
         }
     }
 
     pub fn commands(&self) -> async_channel::Sender<Command> {
         self.commands.clone()
+    }
+
+    /// Shows the copy button's check for 1.5s.
+    pub fn flash_copied(&mut self, cx: &mut Context<Self>) {
+        self.copied_invite = true;
+        cx.notify();
+        cx.spawn(async move |this, cx| {
+            cx.background_executor().timer(std::time::Duration::from_millis(1500)).await;
+            let _ = this.update(cx, |view, cx| {
+                view.copied_invite = false;
+                cx.notify();
+            });
+        })
+        .detach();
     }
 
     pub fn send(&self, command: Command) {

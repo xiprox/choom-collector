@@ -26,6 +26,9 @@ pub fn mono(cx: &App, text: impl Into<SharedString>) -> Div {
 pub fn plain_button(id: impl Into<ElementId>, text: impl Into<SharedString>, leading: Option<IconName>) -> Stateful<Div> {
     h_flex()
         .id(id.into())
+        // Blocks the hit to what's behind, so in the title bar a real click reaches the button
+        // instead of Windows taking it as a grab of the bar to move the window.
+        .occlude()
         .h(px(24.))
         .px(px(8.))
         .gap(px(6.))
@@ -42,6 +45,9 @@ pub fn plain_button(id: impl Into<ElementId>, text: impl Into<SharedString>, lea
 pub fn icon_button(id: impl Into<ElementId>, name: IconName, hex: u32) -> Stateful<Div> {
     div()
         .id(id.into())
+        // Blocks the hit to what's behind, so in the title bar a real click reaches the button
+        // instead of Windows taking it as a grab of the bar to move the window.
+        .occlude()
         .flex()
         .items_center()
         .justify_center()
@@ -57,6 +63,9 @@ pub fn icon_button(id: impl Into<ElementId>, name: IconName, hex: u32) -> Statef
 pub fn outline_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
     h_flex()
         .id(id.into())
+        // Blocks the hit to what's behind, so in the title bar a real click reaches the button
+        // instead of Windows taking it as a grab of the bar to move the window.
+        .occlude()
         .h(px(24.))
         .px(px(10.))
         .rounded(RADIUS)
@@ -73,6 +82,9 @@ pub fn outline_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -
 pub fn accent_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
     h_flex()
         .id(id.into())
+        // Blocks the hit to what's behind, so in the title bar a real click reaches the button
+        // instead of Windows taking it as a grab of the bar to move the window.
+        .occlude()
         .h(px(28.))
         .px(px(20.))
         .rounded(RADIUS)
@@ -101,6 +113,9 @@ pub fn checkbox(id: impl Into<ElementId>, check: Check, focused: bool) -> Statef
     };
     div()
         .id(id.into())
+        // Blocks the hit to what's behind, so in the title bar a real click reaches the button
+        // instead of Windows taking it as a grab of the bar to move the window.
+        .occlude()
         .flex()
         .items_center()
         .justify_center()
