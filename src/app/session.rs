@@ -154,6 +154,7 @@ impl AppView {
                 .when(can_open, |r| {
                     r.on_click(cx.listener(move |view, _, _, cx| {
                         view.selected = Some(id);
+                        view.picked = true;
                         cx.notify();
                     }))
                 })
