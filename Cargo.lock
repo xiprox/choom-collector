@@ -950,7 +950,7 @@ dependencies = [
 
 [[package]]
 name = "coop-core"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -974,7 +974,7 @@ dependencies = [
 
 [[package]]
 name = "coop-logs"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "coop-proto",
@@ -986,7 +986,7 @@ dependencies = [
 
 [[package]]
 name = "coop-mods"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "chrono",
  "coop-proto",
@@ -1001,7 +1001,7 @@ dependencies = [
 
 [[package]]
 name = "coop-proto"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "postcard",
  "serde",
@@ -1240,7 +1240,7 @@ dependencies = [
 
 [[package]]
 name = "cyberpunk-coop-tools"
-version = "0.3.0"
+version = "0.4.0"
 dependencies = [
  "async-channel",
  "chrono",

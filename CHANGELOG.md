@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/xiprox/cyberpunk-coop-tools/compare/v0.3.0...v0.4.0) (2026-11-13)
+
+
+### Features
+
+* draw in IBM Plex on near-black, on a 4px grid, with an icon of its own ([9f86248](https://github.com/xiprox/cyberpunk-coop-tools/commit/9f86248011e62ca5d77a73b3eb4c2b9d0f0f3b90))
+
+
+### Bug Fixes
+
+* size the mods table's columns as the frame does ([f61c6d8](https://github.com/xiprox/cyberpunk-coop-tools/commit/f61c6d89f7cacd3293d2391fd7c44eb011674716))
+* take real clicks on the title bar's buttons, and tidy the session window ([6513961](https://github.com/xiprox/cyberpunk-coop-tools/commit/651396106004755a23921ce2608113cfa492fc8c))
+
 ## [0.3.0](https://github.com/xiprox/cyberpunk-coop-tools/compare/v0.2.0...v0.3.0) (2026-11-13)
 
 
