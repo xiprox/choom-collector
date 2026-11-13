@@ -59,7 +59,7 @@ The Settings window, Velopack's update check, the app's own log, and the AppImag
 Exit: a Windows install from one release updates itself to the next, and the AppImage joins a session on the user's Steam Deck.
 
 Built on 2026-11-13: the Settings page, the update check and its button, and the app's log ([interface log](../interface/log.md#2026-11-13-settings-and-the-update-button-went-straight-into-the-window-with-no-frames-first)).
-The exit's two tests wait for the next release and the Steam Deck.
+The Windows half of the exit passed on 2026-11-13, an installed 0.2.0 updating itself to 0.3.0 ([build log](../build/log.md#2026-11-13-an-installed-020-found-030-by-itself-built-it-from-the-delta-and-restarted-into-it-in-3s)); the Steam Deck half waits for the user.
 
 ## 8. A session with friends
 

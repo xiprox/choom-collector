@@ -1,5 +1,19 @@
 # Build log
 
+## 2026-11-13: An installed 0.2.0 found 0.3.0 by itself, built it from the delta, and restarted into it in 3s
+
+We asked whether an installed copy updates itself from one release to the next, as [decision 004](../../decisions/004-releases-with-release-please-and-velopack.md) and stage 7's exit expect.
+We expected the check to run 5s after start and fetch the 2.56 MB delta rather than the full package.
+
+On the user's Windows 11 PC, at the user's request, 0.3.0 was uninstalled with `Update.exe uninstall --silent`, which left the data folder and its settings in place, and 0.2.0's `Setup.exe --silent` installed it (measured on 2026-11-13; the installer is unsigned, as every release is so far):
+
+- `Setup.exe --silent` finished in about 1s and didn't start the app, so it was started through `Cyberpunk Co-op Tools.exe` in the install folder, as a shortcut does.
+- 14s after it started, its log said "downloaded the update to 0.3.0": Velopack found 1 delta between 0.2.0 and 0.3.0, downloaded it in 4s, built the full 0.3.0 package from it in 2s, and deleted the 0.2.0 package and the delta.
+- The title bar showed "Restart to update", and a click on it, posted by `tools/capture-window.ps1`, closed the window; 3s later the log said "Cyberpunk Co-op Tools 0.3.0 starting".
+- 0.3.0 opened on the same session code with the same settings, its status bar said 0.3.0, the button was gone, and "Your mods" listed 50 mods from the user's real game, which 0.2.0, without mod sharing, couldn't.
+
+This passes the first half of stage 7's exit; the Steam Deck half is the user's.
+
 ## 2026-11-13: 0.3.0 is the first release with delta packages, a quarter of the full one on Windows
 
 We asked whether the release workflow makes delta packages once an earlier release has the same pack ID, which 0.1.0's `cp77-coop-tools` didn't give 0.2.0.
