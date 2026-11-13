@@ -1,5 +1,20 @@
 # Build log
 
+## 2026-11-13: 0.3.0 is the first release with delta packages, a quarter of the full one on Windows
+
+We asked whether the release workflow makes delta packages once an earlier release has the same pack ID, which 0.1.0's `cp77-coop-tools` didn't give 0.2.0.
+We expected a Windows delta well under the full package, since one exe changed.
+
+The user merged the 0.3.0 release PR, and release `v0.3.0` came out of a 7m34s run with these packages (measured on GitHub Actions, 2026-11-13):
+
+| Package | Delta from 0.2.0 | Full |
+| --- | --- | --- |
+| `win-x64` | 2.56 MB | 9.90 MB |
+| `linux-x64` | 11.81 MB | 16.04 MB |
+
+- The Linux delta is 74% of the full package, against 26% on Windows (unverified why: possibly the AppImage's compressed image differing throughout after a change).
+- Whether an installed 0.2.0 applies the delta and starts 0.3.0 is the update test stage 7 still needs.
+
 ## 2026-11-13: The repository went public under MIT, and its releases read without a token
 
 We asked whether an installed copy can find its updates once the repository is public, since Velopack's `GithubSource` reads the releases with no token, and a private repository's releases answer 404.
