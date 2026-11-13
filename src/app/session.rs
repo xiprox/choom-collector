@@ -19,6 +19,12 @@ const SHARER_COL: Pixels = px(88.);
 const STATUS_COL: Pixels = px(230.);
 const CHANGED_COL: Pixels = px(64.);
 
+/// "2.31, Steam", or as much of it as the player's PC could tell.
+fn game_line(p: &Player) -> String {
+    let parts: Vec<&str> = [p.game_version.as_str(), p.store.as_str()].into_iter().filter(|s| !s.is_empty()).collect();
+    if parts.is_empty() { "Version unknown".into() } else { parts.join(", ") }
+}
+
 impl AppView {
     pub fn render_session(&mut self, s: &Session, version: &str, update: Option<&str>, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let host_version = s.host().map(|h| h.game_version.clone());
@@ -195,6 +201,7 @@ impl AppView {
                         SourceKind::GameFolder => text("Game folder logs".into(), TEXT),
                         SourceKind::CrashReports => text("Crash reports".into(), TEXT),
                         SourceKind::GameOwn => text("The game's own logs and settings".into(), TEXT),
+                        SourceKind::AppLog => text("This app's log".into(), TEXT),
                         SourceKind::Extra { pattern } => h_flex()
                             .gap(px(6.))
                             .min_w_0()
@@ -220,7 +227,7 @@ impl AppView {
             .child(
                 v_flex()
                     .gap(px(4.))
-                    .child(row("Game", text(format!("{}, {}", p.game_version, p.store), if off_version { WARNING } else { TEXT })))
+                    .child(row("Game", text(game_line(p), if off_version { WARNING } else { TEXT })))
                     .child(row("System", text(p.system.clone(), TEXT)))
                     .child(row("Joined", text(joined, TEXT)))
                     .child(row(

@@ -9,6 +9,8 @@ The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [wr
 - [areas/architecture/02-settings-and-the-game.md](areas/architecture/02-settings-and-the-game.md): the settings and their file, and how the app finds the game, its version, the name, and the system.
 - [areas/network/01-relay-and-sessions.md](areas/network/01-relay-and-sessions.md): the relay's endpoints and frames, codes, the first messages, and reconnecting.
 - [areas/network/log.md](areas/network/log.md): what the relay's tests found about routing, a host's drop, and refusals.
+- [areas/logs/01-collecting.md](areas/logs/01-collecting.md): how each player's logs are found, followed by content, and written into the host's session folder.
+- [areas/logs/log.md](areas/logs/log.md): what coop-logs' tests and a real session found, and what it changes from CP77 Log Collector.
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
 - [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
 - [areas/build/log.md](areas/build/log.md): what the release pipeline produced, and what's untested in it.

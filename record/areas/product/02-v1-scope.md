@@ -50,6 +50,7 @@ On Linux the game runs in Proton, and its `%LOCALAPPDATA%` is inside the prefix 
 ### How they're sent
 
 - When a tester joins, they send the last 32 MB of every log that changed in the last 24 hours, and after that everything new as it's written.
+  Files under the host's extra paths go whatever their age, since the host named them.
 - A file is followed by its content, not its name: its first 512 bytes, and a fingerprint of what was sent, FNV-1a over the bytes when there are 64 KB or less, or over 32 samples of 64 bytes spread across them.
   So when a mod rotates its logs, `x.log` to `x.1.log` and a new `x.log`, the host renames its copies instead of receiving them again, and a file copied under a new name is copied on the host.
 - A full scan runs every 10s, and a rename, shrink, or delete triggers one at once.
@@ -68,7 +69,8 @@ The host's folder holds one folder per session, named by date and code, with a f
     crash-reports/...
     localappdata/...
     extra/...
-    _peer.txt          their game folder, game version, system, and connection state
+    app/app.log        this app's own log on their PC
+    _peer.txt          their game version, system, and connection state
     _events.log        new files, rotations, reconnects
     _manifest.tsv      which part of which source file each copy holds, and where it is here
     _history/<time>/   older copies a rotation or a rewrite replaced
@@ -77,7 +79,8 @@ The host's folder holds one folder per session, named by date and code, with a f
 
 - Copies are plain files, readable while they're being written.
 - **Changed:** the folder is named by session, so one folder holds one test run (CP77 Log Collector writes into one folder the host picks).
-- TBD: whether the session folder gets an index written for Claude, naming who played, on which game version and build, and when anyone crashed; stage 5 settles it.
+- **Dropped:** the player's game folder in `_peer.txt`, since its path can hold their user name, and the host's analysis hasn't needed it.
+- TBD: whether the session folder gets an index written for Claude, naming who played, on which game version and build, and when anyone crashed; stage 5 left it open, for the first session with friends to show whether Claude needs one.
 
 ## Mods
 

@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 
 use anyhow::Result;
 use chrono::{DateTime, Local, TimeZone as _};
+use coop_logs::{Collector, PeerInfo, Progress, Sender, SenderConfig, SourceCount};
 use coop_proto::{Doing, GameInfo, Hello, PROTOCOL, PlayerInfo, ToHost, ToTester, Welcome, decode, encode};
 use tokio::time::{sleep, timeout};
 
@@ -23,8 +24,17 @@ const TESTER_GRACE: Duration = Duration::from_secs(60);
 /// The waits between tries to reach the relay, the last repeating.
 const RETRIES: [Duration; 4] = [Duration::from_millis(500), Duration::from_millis(1500), Duration::from_secs(4), Duration::from_secs(8)];
 const PING_EVERY: Duration = Duration::from_secs(10);
+/// How often the logs' `Sender` and `Collector` get a turn. A `Sender` looks at its files once a
+/// second and scans every 10s by itself, so most turns do nothing; a backlog sends up to 2 MB a turn.
+const LOGS_EVERY: Duration = Duration::from_millis(250);
 
-pub fn start(data_dir: PathBuf, app_log: PathBuf, app_version: String, name: Option<String>) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
+pub fn start(
+    data_dir: PathBuf,
+    app_log: PathBuf,
+    app_version: String,
+    name: Option<String>,
+    local_app_data: Option<PathBuf>,
+) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
     let (command_tx, command_rx) = async_channel::unbounded::<Command>();
     let (snapshot_tx, snapshot_rx) = async_channel::unbounded::<Snapshot>();
     std::thread::Builder::new()
@@ -36,6 +46,7 @@ pub fn start(data_dir: PathBuf, app_log: PathBuf, app_version: String, name: Opt
                 if let Some(name) = name {
                     core.me.name = name;
                 }
+                core.local_app_data = local_app_data;
                 tokio::spawn(updates::watch(core.update.clone(), core.last.clone(), core.snapshots.clone()));
                 core.run().await;
             });
@@ -135,6 +146,8 @@ struct Core {
     /// The setup screen's state while it shows; the first run's, or after Stop or Leave.
     setup: Option<Setup>,
     update: updates::Slot,
+    /// `--local-app-data`, which test runs use instead of the game's own.
+    local_app_data: Option<PathBuf>,
 }
 
 /// Why a session's loop returned.
@@ -161,7 +174,7 @@ impl Core {
         })
         .await
         .expect("finding the game shouldn't panic");
-        Self { data_dir, app_log, app_version, settings, me, commands, snapshots, last: Default::default(), setup: None, update: Default::default() }
+        Self { data_dir, app_log, app_version, settings, me, commands, snapshots, last: Default::default(), setup: None, update: Default::default(), local_app_data: None }
     }
 
     fn show(&self, screen: Screen) -> bool {
@@ -213,7 +226,11 @@ impl Core {
 
     /// Saves the Settings page's answers; true when the session must start again for them.
     fn save_settings(&mut self, answers: SettingsAnswers) -> bool {
-        let restart = self.settings.take_answers(answers);
+        let logs_folder = |s: &Settings| s.logs_folder.clone().unwrap_or_else(default_logs_folder);
+        let before = logs_folder(&self.settings);
+        let mut restart = self.settings.take_answers(answers);
+        // The host's Collector writes into one folder for the whole session.
+        restart |= self.settings.role == Some(SavedRole::Host) && logs_folder(&self.settings) != before;
         if let Err(e) = self.settings.save(&self.data_dir) {
             log::warn!("{e:#}");
         }
@@ -325,6 +342,25 @@ impl Core {
         }
     }
 
+    /// This PC's logs, or `None` when the game isn't found: a `Sender` with no game folder would
+    /// scan whatever folder the app started in.
+    fn new_sender(&self, extra_paths: Vec<String>) -> Option<Sender> {
+        let game = self.me.game.as_ref()?;
+        Some(Sender::new(SenderConfig {
+            game_folder: game.folder.clone(),
+            local_app_data: self.local_app_data.clone().or_else(|| game::local_app_data(&game.folder)),
+            app_log: Some(self.app_log.clone()),
+            extra_paths,
+        }))
+    }
+
+    /// What the host's `_peer.txt` says about this PC. The game folder stays out of it, since its
+    /// path can hold the player's user name.
+    fn peer_info(&self) -> PeerInfo {
+        let game = self.game_info();
+        PeerInfo { game_folder: String::new(), game_version: game.version, system: self.me.system.clone() }
+    }
+
     fn game_info(&self) -> GameInfo {
         match &self.me.game {
             Some(g) => GameInfo { version: g.version.clone().unwrap_or_default(), store: game::store(&g.folder).into() },
@@ -343,6 +379,8 @@ impl Core {
     async fn host(&mut self) -> Ended {
         let started = Local::now();
         let folder = self.session_folder(started);
+        // The Sender and Collector touch only files, so the core calls them in its own thread:
+        // nothing else runs there, and the relay's sockets carry on in the runtime's workers.
         let mut host = Hosting {
             players: BTreeMap::new(),
             by_tester: BTreeMap::new(),
@@ -350,8 +388,17 @@ impl Core {
             link: Link::Connecting,
             latency: None,
             problem: None,
+            collector: Collector::new(folder.clone()),
+            own: self.new_sender(self.settings.extra_paths.clone()),
+            own_id: self.settings.install_id.clone(),
+            extra_paths: self.settings.extra_paths.clone(),
             folder,
         };
+        // The host's own logs go into the session folder like everyone else's.
+        let has = host.collector.welcome(&host.own_id, &self.me.name, self.peer_info());
+        if let Some(own) = &mut host.own {
+            own.resume(&has);
+        }
         host.players.insert(
             1,
             Entry {
@@ -415,6 +462,7 @@ impl Core {
 
             let mut ping = tokio::time::interval(PING_EVERY);
             let mut tick = tokio::time::interval(Duration::from_secs(1));
+            let mut logs = tokio::time::interval(LOGS_EVERY);
             loop {
                 host.latency = link.latency_ms();
                 host.link = Link::Connected { latency_ms: host.latency.unwrap_or(0) };
@@ -456,8 +504,6 @@ impl Core {
                                 link.stop().await;
                                 return Ended::Restart;
                             }
-                            // The logs folder may have changed; logs from now on go to the new one.
-                            host.folder = self.session_folder(started);
                         }
                         Err(_) => {
                             link.stop().await;
@@ -469,6 +515,15 @@ impl Core {
                         if host.forget_gone() {
                             let _ = link.send_to_everyone(&encode(&ToTester::Players(host.list()))).await;
                         }
+                    }
+                    _ = logs.tick() => {
+                        // Settings changed the extra paths: every player's PC hears them in a new Welcome.
+                        if host.extra_paths != self.settings.extra_paths {
+                            for (to, welcome) in host.new_extra_paths(self.settings.extra_paths.clone(), &self.me.name) {
+                                let _ = link.send_to(&to, &encode(&welcome)).await;
+                            }
+                        }
+                        host.collect();
                     }
                 }
             }
@@ -482,7 +537,16 @@ impl Core {
             relay: self.settings.relay.clone(),
             link: host.link.clone(),
             host_name: self.me.name.clone(),
-            players: host.players.values().map(|e| player(&e.info, 1, e.left.is_some() || !e.info.connected)).collect(),
+            players: host
+                .players
+                .values()
+                .map(|e| {
+                    let mut p = player(&e.info, 1, e.left.is_some() || !e.info.connected);
+                    p.bytes = host.collector.received_bytes(&e.install_id);
+                    p.sources = sources(host.collector.sources(&e.install_id));
+                    p
+                })
+                .collect(),
             shared: Vec::new(),
             my_mods: Vec::new(),
             logs: LogsLine::Host { folder: host.folder.clone() },
@@ -509,7 +573,15 @@ impl Core {
     // ---------- joining ----------
 
     async fn join(&mut self) -> Ended {
-        let mut joined = Joining { me: None, host_name: String::new(), players: Vec::new(), link: Link::Connecting, problem: None };
+        let mut joined = Joining {
+            me: None,
+            host_name: String::new(),
+            players: Vec::new(),
+            link: Link::Connecting,
+            problem: None,
+            sender: self.new_sender(Vec::new()),
+            welcomed: false,
+        };
         let mut tries = 0usize;
         loop {
             if !self.show_joining(&joined) {
@@ -552,9 +624,8 @@ impl Core {
             // The host answers a Hello at once; a host that doesn't is treated as a drop.
             match timeout(Duration::from_secs(10), link.next()).await {
                 Ok(TesterEvent::Message(data)) => match decode::<ToTester>(&data) {
-                    Some(ToTester::Welcome(Welcome { host_name, player_id, .. })) => {
-                        joined.host_name = host_name;
-                        joined.me = Some(player_id);
+                    Some(ToTester::Welcome(welcome)) => {
+                        joined.welcome(welcome);
                         joined.link = Link::Connected { latency_ms: 0 };
                         joined.problem = None;
                     }
@@ -577,6 +648,7 @@ impl Core {
             let _ = link.ping().await;
 
             let mut ping = tokio::time::interval(PING_EVERY);
+            let mut logs = tokio::time::interval(LOGS_EVERY);
             loop {
                 joined.link = Link::Connected { latency_ms: link.latency_ms().unwrap_or(0) };
                 if !self.show_joining(&joined) {
@@ -586,7 +658,8 @@ impl Core {
                     event = link.next() => match event {
                         TesterEvent::Message(data) => match decode::<ToTester>(&data) {
                             Some(ToTester::Players(players)) => joined.players = players,
-                            Some(ToTester::Welcome(w)) => joined.me = Some(w.player_id),
+                            // The host sends another when its extra paths change.
+                            Some(ToTester::Welcome(welcome)) => joined.welcome(welcome),
                             _ => {}
                         },
                         TesterEvent::Ended(_) => {
@@ -616,6 +689,15 @@ impl Core {
                         }
                     },
                     _ = ping.tick() => { let _ = link.ping().await; }
+                    _ = logs.tick() => {
+                        // A message lost to a drop is sent again after the next Welcome, from what
+                        // the host has, so a failed send needs nothing more here.
+                        for message in joined.sender.as_mut().map(Sender::tick).unwrap_or_default() {
+                            if link.send(&encode(&ToHost::Logs(message))).await.is_err() {
+                                break;
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -624,6 +706,7 @@ impl Core {
     fn show_joining(&self, joined: &Joining) -> bool {
         let me = joined.me.unwrap_or(0);
         let mut players: Vec<Player> = joined.players.iter().map(|p| player(p, me, !p.connected)).collect();
+        let host = if joined.host_name.is_empty() { "the host".to_string() } else { joined.host_name.clone() };
         if players.is_empty() {
             // Until the host's list arrives, the window still shows who this PC is.
             players.push(player(
@@ -642,17 +725,32 @@ impl Core {
                 false,
             ));
         }
+        if let (Some(sender), Some(row)) = (&joined.sender, players.iter_mut().find(|p| p.is_me)) {
+            row.bytes = sender.sent_bytes();
+            row.sources = sources(sender.sources());
+        }
+        let sending = match &joined.sender {
+            Some(sender) if joined.welcomed && matches!(joined.link, Link::Connected { .. }) => match sender.progress() {
+                Progress::CatchingUp { done, total } => Sending::CatchingUp { done, total },
+                Progress::UpToDate => Sending::UpToDate,
+            },
+            Some(_) if joined.welcomed => Sending::Paused,
+            _ => Sending::Idle,
+        };
+        let problem = joined.problem.clone().or_else(|| {
+            joined.sender.is_none().then(|| format!("The game isn't found on this PC, so no logs go to {host}. Leave, then pick its folder."))
+        });
         self.show(Screen::Session(Session {
             role: Role::Tester,
             code: self.settings.code.clone(),
             relay: self.settings.relay.clone(),
             link: joined.link.clone(),
-            host_name: if joined.host_name.is_empty() { "the host".into() } else { joined.host_name.clone() },
+            host_name: host.clone(),
             players,
             shared: Vec::new(),
             my_mods: Vec::new(),
-            logs: LogsLine::Tester { host: if joined.host_name.is_empty() { "the host".into() } else { joined.host_name.clone() }, sending: Sending::Idle },
-            problem: joined.problem.clone(),
+            logs: LogsLine::Tester { host, sending },
+            problem,
         }))
     }
 }
@@ -679,10 +777,42 @@ struct Hosting {
     link: Link,
     latency: Option<u32>,
     problem: Option<String>,
+    collector: Collector,
+    /// The host's own logs, or `None` when this PC has no game.
+    own: Option<Sender>,
+    own_id: String,
+    /// The extra paths every player's PC has heard in its latest Welcome.
+    extra_paths: Vec<String>,
     folder: PathBuf,
 }
 
 impl Hosting {
+    /// Gives the host's own logs a turn, straight into the Collector, and the Collector its own.
+    fn collect(&mut self) {
+        if let Some(own) = &mut self.own {
+            for message in own.tick() {
+                self.collector.on_message(&self.own_id, &message);
+            }
+        }
+        self.collector.tick();
+    }
+
+    /// Takes new extra paths, and returns a Welcome with them for every connected tester. Each
+    /// Welcome starts a new generation of logs, which the testers' Senders go on from.
+    fn new_extra_paths(&mut self, extra_paths: Vec<String>, host_name: &str) -> Vec<(TesterId, ToTester)> {
+        self.extra_paths = extra_paths;
+        if let Some(own) = &mut self.own {
+            own.set_extra_paths(self.extra_paths.clone());
+        }
+        let mut welcomes = Vec::new();
+        for entry in self.players.values() {
+            let Some(tester) = entry.tester else { continue };
+            let peer = PeerInfo { game_folder: String::new(), game_version: entry.info.game.version.clone(), system: entry.info.system.clone() };
+            let logs = self.collector.welcome(&entry.install_id, &entry.info.name, peer);
+            welcomes.push((tester, ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: entry.info.id, extra_paths: self.extra_paths.clone(), logs })));
+        }
+        welcomes
+    }
     fn list(&self) -> Vec<PlayerInfo> {
         self.players.values().map(|e| PlayerInfo { connected: e.left.is_none(), ..e.info.clone() }).collect()
     }
@@ -727,8 +857,11 @@ impl Hosting {
                 entry.info.system = hello.system;
                 entry.left = None;
                 self.by_tester.insert(from, id);
+                // The tester's PC goes on from what the host already has of its logs.
+                let peer = PeerInfo { game_folder: String::new(), game_version: entry.info.game.version.clone(), system: entry.info.system.clone() };
+                let logs = self.collector.welcome(&hello.install_id, &entry.info.name, peer);
                 vec![
-                    (Some(from), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: id, extra_paths: extra_paths.to_vec(), logs: Vec::new() })),
+                    (Some(from), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: id, extra_paths: extra_paths.to_vec(), logs })),
                     (None, ToTester::Players(self.list())),
                 ]
             }
@@ -741,8 +874,15 @@ impl Hosting {
                 entry.info.doing = doing;
                 vec![(None, ToTester::Players(self.list()))]
             }
-            // Stages 5 and 6 of record/areas/product/plan.md pass these to coop-logs and coop-mods.
-            ToHost::Logs(_) | ToHost::Mods(_) => Vec::new(),
+            ToHost::Logs(message) => {
+                if let Some(entry) = self.by_tester.get(&from).and_then(|id| self.players.get(id)) {
+                    // The host never answers a Sender, so there's nothing to send back.
+                    self.collector.on_message(&entry.install_id, &message);
+                }
+                Vec::new()
+            }
+            // Stage 6 of record/areas/product/plan.md passes these to coop-mods.
+            ToHost::Mods(_) => Vec::new(),
         }
     }
 
@@ -752,6 +892,7 @@ impl Hosting {
         if let Some(entry) = self.players.get_mut(&id) {
             entry.tester = None;
             entry.left = Some(Instant::now());
+            self.collector.left(&entry.install_id);
         }
         true
     }
@@ -770,6 +911,22 @@ struct Joining {
     players: Vec<PlayerInfo>,
     link: Link,
     problem: Option<String>,
+    /// This PC's logs, or `None` when it has no game.
+    sender: Option<Sender>,
+    /// A Welcome came, so the Sender has somewhere to send.
+    welcomed: bool,
+}
+
+impl Joining {
+    fn welcome(&mut self, welcome: Welcome) {
+        self.host_name = welcome.host_name;
+        self.me = Some(welcome.player_id);
+        self.welcomed = true;
+        if let Some(sender) = &mut self.sender {
+            sender.set_extra_paths(welcome.extra_paths);
+            sender.resume(&welcome.logs);
+        }
+    }
 }
 
 fn player(info: &PlayerInfo, me: u64, reconnecting: bool) -> Player {
@@ -795,6 +952,21 @@ fn player(info: &PlayerInfo, me: u64, reconnecting: bool) -> Player {
         },
         sources: None,
     }
+}
+
+/// The window's list of where a player's logs come from, or `None` before their PC has said.
+fn sources(counts: Vec<SourceCount>) -> Option<Vec<LogSource>> {
+    if counts.is_empty() {
+        return None;
+    }
+    let kind = |k: coop_logs::SourceKind| match k {
+        coop_logs::SourceKind::GameFolder => SourceKind::GameFolder,
+        coop_logs::SourceKind::CrashReports => SourceKind::CrashReports,
+        coop_logs::SourceKind::GameOwn => SourceKind::GameOwn,
+        coop_logs::SourceKind::AppLog => SourceKind::AppLog,
+        coop_logs::SourceKind::Extra(pattern) => SourceKind::Extra { pattern },
+    };
+    Some(counts.into_iter().map(|c| LogSource { kind: kind(c.kind), count: c.count }).collect())
 }
 
 /// `K7RM2Q` reads `K7R-M2Q`.

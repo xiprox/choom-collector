@@ -42,6 +42,8 @@ Collection as the scope describes it: sources, history, following by content, ro
 
 Exit: in a test session, a line a tester's log gains is in the host's copy within 2s, a rotation renames the host's copies without sending them again, and a tester that restarts sends nothing twice.
 
+Done on 2026-11-13 ([logs log](../logs/log.md#2026-11-13-in-a-real-session-a-testers-new-line-reached-the-host-in-096s-a-rotation-was-a-rename-and-a-restart-sent-nothing-twice)).
+
 ## 6. Mods
 
 Sharing as the scope describes it: finding and merging, sharing and following, the host's cache, applying with backups, held files on Windows, the DLL warning, loose files, unfollowing, and each follower's state for the sharer.

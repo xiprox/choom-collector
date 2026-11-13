@@ -21,6 +21,8 @@ Usage: cyberpunk-coop-tools [options]
   --data-dir <folder>   keep settings, the app's log, and backups in this folder
   --demo <screen>       show a made-up session: host, tester, setup-join, or setup-host
   --name <name>         show up as this name, for test runs of several copies on one PC
+  --local-app-data <folder>
+                        read this folder as the game's %LOCALAPPDATA%, for test runs
   --help                show this
 ";
 
@@ -28,16 +30,18 @@ struct Args {
     data_dir: Option<PathBuf>,
     demo: Option<coop_core::DemoScreen>,
     name: Option<String>,
+    local_app_data: Option<PathBuf>,
 }
 
 fn parse_args() -> Result<Args, String> {
-    let mut args = Args { data_dir: None, demo: None, name: None };
+    let mut args = Args { data_dir: None, demo: None, name: None, local_app_data: None };
     let mut it = std::env::args().skip(1);
     while let Some(arg) = it.next() {
         match arg.as_str() {
             "--data-dir" => args.data_dir = Some(it.next().ok_or("--data-dir needs a folder")?.into()),
             "--demo" => args.demo = Some(it.next().ok_or("--demo needs a screen")?.parse()?),
             "--name" => args.name = Some(it.next().ok_or("--name needs a name")?),
+            "--local-app-data" => args.local_app_data = Some(it.next().ok_or("--local-app-data needs a folder")?.into()),
             "--help" | "-h" => return Err(String::new()),
             other => return Err(format!("unknown option {other:?}")),
         }
@@ -65,6 +69,7 @@ fn main() -> ExitCode {
         data_dir: args.data_dir,
         demo: args.demo,
         name: args.name,
+        local_app_data: args.local_app_data,
     });
 
     gpui_kit::application().with_assets(assets::Assets).run(move |cx: &mut App| {

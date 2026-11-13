@@ -183,7 +183,8 @@ A host that starts on another day gets a new session folder, and every player se
     localappdata/...
     app/...
     extra/...
-    _peer.txt          their install ID, game folder, game version, system, sources, and connection state
+    _peer.txt          their install ID, game version, system, sources, and connection state
+                       (and a game folder line, which the core leaves empty: see the v1 scope)
     _events.log        new files, rotations, copies, files gone, and connections
     _manifest.tsv      which part of which source file each copy holds, and where it is here
     _history/<time>/   older copies a rotation, copy, or rewrite pushed out

@@ -24,6 +24,9 @@ pub struct Options {
     pub demo: Option<DemoScreen>,
     /// The name to show up as instead of the Steam name, for test runs of several copies on one PC.
     pub name: Option<String>,
+    /// The folder to read as the game's `%LOCALAPPDATA%`, for test runs that keep off the real
+    /// game's crash reports and logs.
+    pub local_app_data: Option<PathBuf>,
 }
 
 /// Starts the core, and returns the channel the window sends commands on and the channel it
@@ -35,7 +38,7 @@ pub fn start(options: Options) -> (async_channel::Sender<Command>, async_channel
             let data_dir = options.data_dir.unwrap_or_else(settings::default_data_dir);
             let app_log = applog::start(&data_dir);
             log::info!("Cyberpunk Co-op Tools {} starting, data in {}", options.app_version, data_dir.display());
-            session::start(data_dir, app_log, options.app_version, options.name)
+            session::start(data_dir, app_log, options.app_version, options.name, options.local_app_data)
         }
     }
 }

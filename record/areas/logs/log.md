@@ -1,5 +1,20 @@
 # Logs log
 
+## 2026-11-13: In a real session, a tester's new line reached the host in 0.96s, a rotation was a rename, and a restart sent nothing twice
+
+We asked whether stage 5's exit holds with the core carrying `coop-logs` over the relay: a line within 2s, a rotation renamed without sending it again, and nothing sent twice after a tester restarts.
+We expected the line to take about a second, since a `Sender` looks at its files once a second.
+
+A host and a tester, mira, ran from one copy of the debug build against `wrangler dev` on this PC, each with its own data folder, a made-up game folder with an empty `Cyberpunk2077.exe`, and `--local-app-data` pointing at an empty folder, so neither read the real game's files (measured on Windows 11, 2026-11-13):
+
+- Within 6s of starting, the host's session folder had both players' redscript and red4ext logs, both app logs, and mira's `prices.csv` from the host's extra path `bin/x64/StreetVendors/*.csv`.
+- A line appended to mira's redscript log was in the host's copy 0.96s later, timed by polling the copy every 50ms.
+- Renaming mira's `red4ext.log` to `red4ext.log.1` and writing a new `red4ext.log` showed in mira's `_events.log` as one rotation and one new file, and the host's `red4ext.log.1` held the old content.
+- After the tester's process was stopped and started again, `_events.log` said "Connected; 5 of their files are here already", and the only bytes the host gained were the one line written while the tester was down.
+- The windows showed the counts per source, mira's "Up to date" in the status bar, and 0 files for the extra path on the host's own PC, in warning's color.
+
+The host's own logs go through the relay's loop, so while the relay can't be reached they wait, and catch up once it's back.
+
 ## 2026-11-13: coop-logs ports CP77 Log Collector's collecting, and needs a generation per Welcome to resume exactly over the relay
 
 We asked whether CP77 Log Collector's log collecting, ported to a `Sender` and a `Collector` that never touch the network, still follows files by content and resumes exactly, as [collecting logs](01-collecting.md) describes.

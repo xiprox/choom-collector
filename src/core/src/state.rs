@@ -155,6 +155,8 @@ pub enum SourceKind {
     GameFolder,
     CrashReports,
     GameOwn,
+    /// This app's own log.
+    AppLog,
     /// An extra path the host listed, relative to the game folder.
     Extra { pattern: String },
 }
