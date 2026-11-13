@@ -5,7 +5,8 @@
 #                            [-Exe target/debug/cyberpunk-coop-tools.exe] [-Wait 2]
 #   tools/capture-window.ps1 -Out shot.png -ProcessId 1234
 #
-# -ProcessId pictures a copy that's already running, and leaves it running.
+# -ProcessId pictures a copy that's already running, after any -Click or -Hover, and leaves it
+# running.
 #
 # -Click and -Hover take a point in the window's client area, in pixels at its DPI, and act there
 # with posted mouse messages before the picture, so the real mouse never moves.
@@ -91,9 +92,27 @@ public static class CoopCapture {
 "@
 [CoopCapture]::DpiAware()
 
+# Clicks and rests the pointer as -Click and -Hover ask, before the picture.
+function Invoke-Pointer([IntPtr]$h) {
+    if ($Click) {
+        $x, $y = $Click -split ',' | ForEach-Object { [int]$_ }
+        [CoopCapture]::Click($h, $x, $y)
+        Start-Sleep -Milliseconds 400
+    }
+    if ($Hover) {
+        $x, $y = $Hover -split ',' | ForEach-Object { [int]$_ }
+        # A tooltip waits for the pointer to rest, so the pointer arrives, moves once, and rests.
+        [CoopCapture]::Move($h, $x - 2, $y)
+        Start-Sleep -Milliseconds 100
+        [CoopCapture]::Move($h, $x, $y)
+        Start-Sleep -Milliseconds 1200
+    }
+}
+
 if ($ProcessId) {
     $h = [CoopCapture]::Find([uint32]$ProcessId, $Title)
     if ($h -eq [IntPtr]::Zero) { throw "Process $ProcessId has no window titled '$Title'." }
+    Invoke-Pointer $h
     [CoopCapture]::Capture($h, [IO.Path]::GetFullPath($Out))
     return
 }
@@ -109,19 +128,7 @@ try {
     }
     if ($h -eq [IntPtr]::Zero) { throw "No window titled '$Title' appeared within 20s." }
     Start-Sleep -Seconds $Wait
-    if ($Click) {
-        $x, $y = $Click -split ',' | ForEach-Object { [int]$_ }
-        [CoopCapture]::Click($h, $x, $y)
-        Start-Sleep -Milliseconds 400
-    }
-    if ($Hover) {
-        $x, $y = $Hover -split ',' | ForEach-Object { [int]$_ }
-        # A tooltip waits for the pointer to rest, so the pointer arrives, moves once, and rests.
-        [CoopCapture]::Move($h, $x - 2, $y)
-        Start-Sleep -Milliseconds 100
-        [CoopCapture]::Move($h, $x, $y)
-        Start-Sleep -Milliseconds 1200
-    }
+    Invoke-Pointer $h
     [CoopCapture]::Capture($h, [IO.Path]::GetFullPath($Out))
     [CoopCapture]::Close($h)
     if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Confirm:$false }

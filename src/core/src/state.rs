@@ -172,7 +172,8 @@ pub struct SharedMod {
     pub follow: Follow,
     pub has_dll: bool,
     pub status: ModStatus,
-    pub changed: DateTime<Local>,
+    /// When its files last changed, when the sharer's PC has said.
+    pub changed: Option<DateTime<Local>>,
     /// Each follower's state, for a mod the player shares.
     pub followers: Vec<Follower>,
 }
@@ -194,6 +195,16 @@ pub enum ModStatus {
     NotOnYourPc,
     AddedFolder,
     Paused,
+    /// Followed, and the copy here is still being hashed to compare it.
+    Checking,
+    /// Not followed, and this PC has its own copy, the same as the sharer's or not.
+    OnYourPc { same: bool },
+    /// Followed from another sharer, `by`; ticking the row switches to this one.
+    FollowedElsewhere { by: String },
+    /// Followed, and nobody shares it now, so the copy stays as it is.
+    NotShared,
+    /// Not followed, and the player offered their own, which goes out once this sharer stops.
+    OfferedToo,
     /// A mod the player shares: how many followers are up to date.
     Sharing,
 }

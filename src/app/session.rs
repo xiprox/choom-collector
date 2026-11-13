@@ -346,6 +346,12 @@ impl AppView {
                 ModStatus::NotOnYourPc => ("Not on your PC".to_string(), MUTED),
                 ModStatus::AddedFolder => ("Added a folder, tick to take it".to_string(), ACCENT),
                 ModStatus::Paused => ("Paused while reconnecting".to_string(), MUTED),
+                ModStatus::Checking => ("Checking your copy".to_string(), MUTED),
+                ModStatus::OnYourPc { same: true } => ("Yours is the same".to_string(), MUTED),
+                ModStatus::OnYourPc { same: false } => ("Yours differs".to_string(), TEXT),
+                ModStatus::FollowedElsewhere { by } => (format!("Following {by}'s"), MUTED),
+                ModStatus::NotShared => ("No longer shared".to_string(), MUTED),
+                ModStatus::OfferedToo => ("Yours goes out when they stop".to_string(), MUTED),
                 ModStatus::Sharing => (String::new(), MUTED),
             };
             div().text_color(color(hex)).child(words).into_any_element()
@@ -360,7 +366,7 @@ impl AppView {
             .child(div().flex_1().min_w_0().px(px(8.)).truncate().text_color(color(if m.mine || asked_here { STRONG } else { TEXT })).child(m.name.clone()))
             .child(div().w(SHARER_COL).px(px(8.)).text_color(color(MUTED)).truncate().child(if m.mine { "You".to_string() } else { m.sharer.clone() }))
             .child(div().w(STATUS_COL).px(px(8.)).child(status))
-            .child(mono(cx, hhmm(&m.changed)).w(CHANGED_COL).pr(px(12.)).text_right().text_color(color(if m.mine { TEXT } else { MUTED })))
+            .child(mono(cx, m.changed.as_ref().map(hhmm).unwrap_or_default()).w(CHANGED_COL).pr(px(12.)).text_right().text_color(color(if m.mine { TEXT } else { MUTED })))
             .into_any_element()
     }
 

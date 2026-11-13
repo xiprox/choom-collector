@@ -47,7 +47,8 @@ The messages players exchange are Rust types in `coop-proto`, encoded with `post
    A tester on another protocol version gets `Refused`, with the version to update to.
 3. Whenever a player joins, leaves, or changes state, the host sends every tester `Players`: each player's ID, name, game version, system, and state.
 
-Logs and mods messages come with their stages' design docs.
+`ToHost::Logs` and `ToHost::Mods`, and `ToTester::Mods`, carry `coop-logs`' and `coop-mods`' own messages as bytes, which [collecting logs](../logs/01-collecting.md) and [sharing mods](../mods/01-sharing.md) describe; a tester also sends `Doing` when its mods start or stop fetching, or need a game restart, for its row.
+A tester gets a `Welcome` again when the host's extra paths change, and when the host's socket comes back; a second `Welcome` also starts the tester's mods over with the host's hub.
 
 ## Reconnecting
 
@@ -55,5 +56,6 @@ Logs and mods messages come with their stages' design docs.
   CP77 Log Collector's testers wait 5s, or 1s when the host asks, and its host retries at 500ms, 1.5s, 4s, and 8s (read in CP77 Log Collector, src/Sender.cs and src/Relay.cs).
 - A host whose socket drops reconnects with its code and resume token.
   Within 30s it keeps its testers, and tells them to resend from what it has, because the relay drops what testers send while the host is away (read in CP77 Log Collector, README.md, "Getting the others connected").
+  It tells them with a new `Welcome` each.
 - A host that restarts hosts its code again, and testers waiting for it join by themselves.
 - TBD: how often players ping each other, and how long silence counts as a drop; stage 4 measures what the relay's own WebSocket keeps alive.

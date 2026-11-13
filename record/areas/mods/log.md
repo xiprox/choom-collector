@@ -1,5 +1,23 @@
 # Mods log
 
+## 2026-11-13: In a real session, a saved file reached the follower in 2.05s, and a held one landed 0.34s after it was let go
+
+We asked whether stage 6's exit holds with the core carrying `coop-mods` over the relay: a saved file in the follower's copy within 5s, a held file replaced once it's let go, and each follower's state in the sharer's window.
+We expected a save to take about 2s, since the sharer walks its shared folders every 2s.
+
+A host and a tester, mira, ran from one copy of the debug build against `wrangler dev` on this PC, each with its own data folder and a made-up game folder; the host's held TestMod, with a redscript file, a TweakXL file, and a 200-byte stand-in `TestMod.dll` (measured on Windows 11, 2026-11-13).
+Every step went through the windows, with clicks that `tools/capture-window.ps1` posted:
+
+- The host's "Your mods" listed TestMod once, as "RED4ext plugin, redscript, TweakXL", and ticking it put TestMod in mira's shared list as "Not on your PC".
+- Ticking Follow on mira's row asked "Follow TestMod from host?" with the DLL warning, and within 5s of Follow, mira's three files had the same SHA-256 as the host's.
+- The host's row then showed mira's tile and "All 1 up to date".
+- A line the host saved into `main.reds` was in mira's copy 2.05s later, timed by polling it every 50ms.
+- With mira's `main.reds` held open without share-delete, as the game holds a loaded file, a second save left her copy as it was for 7s, while both windows said "Fetching 0 of 1", and the host's list showed mira's row and tile in the accent.
+  0.34s after the handle closed, her copy had the new line, and no `.coop-tmp` was left beside it.
+- After following, mira's "Your mods" listed TestMod too, unticked, once its 10s walk found the new folders: every mod in the game folder shows there, a followed copy included.
+
+While a file is held, the follower's row says it's fetching rather than that it waits for the game to let go; the polish pass can say so.
+
 ## 2026-11-13: Players and a hub in one process keep a follower's copy exact, and a held file lands once it's let go
 
 We asked whether `coop-mods`, as [sharing mods](01-sharing.md) describes it, ports CP77 Log Collector's sharing and following to a hub and players that pass opaque messages, with no network and no threads.

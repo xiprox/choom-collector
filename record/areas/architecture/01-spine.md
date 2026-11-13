@@ -48,6 +48,7 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 | The data folder | `%APPDATA%\CyberpunkCoopTools\` | `~/.config/cyberpunk-coop-tools/` |
 | Settings | `settings.toml` in the data folder | the same |
 | The app's own log | `app.log` in the data folder, moved to `app.1.log` at 5 MB | the same |
+| The mods this PC shares and follows | `mods.toml` in the data folder | the same |
 | Backups of replaced and deleted mod files | `mod-backups/` in the data folder | the same |
 | The host's cache of mod files on their way | `mod-cache/` in the data folder | the same |
 | The host's logs | the folder chosen at setup | the same |

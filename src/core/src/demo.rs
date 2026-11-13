@@ -185,7 +185,7 @@ impl Demo {
                         follow: Follow::No,
                         has_dll: false,
                         status: ModStatus::Sharing,
-                        changed: Local::now(),
+                        changed: Some(Local::now()),
                         followers,
                     });
                 } else {
@@ -270,7 +270,7 @@ fn session(role: Role) -> Session {
                 follow: Follow::No,
                 has_dll: false,
                 status: ModStatus::Sharing,
-                changed: now - Ago::minutes(2),
+                changed: Some(now - Ago::minutes(2)),
                 followers: vec![
                     tile("bossun", Delivery::Fetching { done: 4, total: 12 }),
                     tile("mira", Delivery::Paused),
@@ -285,7 +285,7 @@ fn session(role: Role) -> Session {
                 follow: Follow::No,
                 has_dll: false,
                 status: ModStatus::Sharing,
-                changed: now - Ago::minutes(45),
+                changed: Some(now - Ago::minutes(45)),
                 followers: ["bossun", "mira", "tetsu"].iter().map(|n| tile(n, Delivery::UpToDate)).collect(),
             },
             others_mod("equipmentex", "EquipmentEx", "bossun", true, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(59)),
@@ -352,7 +352,7 @@ fn others_mod(
         follow,
         has_dll,
         status,
-        changed,
+        changed: Some(changed),
         followers: Vec::new(),
     }
 }

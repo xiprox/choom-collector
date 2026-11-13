@@ -11,6 +11,7 @@ use std::time::{Duration, Instant};
 use anyhow::Result;
 use chrono::{DateTime, Local, TimeZone as _};
 use coop_logs::{Collector, PeerInfo, Progress, Sender, SenderConfig, SourceCount};
+use coop_mods::{Hub, Player as ModPlayer, PlayerConfig, Target};
 use coop_proto::{Doing, GameInfo, Hello, PROTOCOL, PlayerInfo, ToHost, ToTester, Welcome, decode, encode};
 use tokio::time::{sleep, timeout};
 
@@ -19,7 +20,8 @@ use crate::relay::{self, HostEvent, HostLink, TesterEvent, TesterId, TesterLink}
 use crate::settings::{SavedRole, Settings, default_logs_folder};
 use crate::state::*;
 
-/// How long a dropped tester shows as reconnecting before the list lets them go.
+/// How long a dropped tester shows as reconnecting before the list lets them go. `AWAY_GRACE` in
+/// coop-mods' hub, how long a dropped sharer keeps their folders, is the same on purpose.
 const TESTER_GRACE: Duration = Duration::from_secs(60);
 /// The waits between tries to reach the relay, the last repeating.
 const RETRIES: [Duration; 4] = [Duration::from_millis(500), Duration::from_millis(1500), Duration::from_secs(4), Duration::from_secs(8)];
@@ -228,9 +230,12 @@ impl Core {
     fn save_settings(&mut self, answers: SettingsAnswers) -> bool {
         let logs_folder = |s: &Settings| s.logs_folder.clone().unwrap_or_else(default_logs_folder);
         let before = logs_folder(&self.settings);
+        let never_share = self.settings.never_share.clone();
         let mut restart = self.settings.take_answers(answers);
-        // The host's Collector writes into one folder for the whole session.
+        // The host's Collector writes into one folder for the whole session, and a mods Player
+        // takes its patterns when it starts.
         restart |= self.settings.role == Some(SavedRole::Host) && logs_folder(&self.settings) != before;
+        restart |= self.settings.never_share != never_share;
         if let Err(e) = self.settings.save(&self.data_dir) {
             log::warn!("{e:#}");
         }
@@ -354,6 +359,18 @@ impl Core {
         }))
     }
 
+    /// This PC's mods, or `None` when the game isn't found.
+    fn new_mod_player(&self) -> Option<ModPlayer> {
+        let game = self.me.game.as_ref()?;
+        Some(ModPlayer::new(PlayerConfig {
+            game_folder: game.folder.clone(),
+            data_dir: self.data_dir.clone(),
+            install_id: self.settings.install_id.clone(),
+            name: self.me.name.clone(),
+            never_share: self.settings.never_share.clone(),
+        }))
+    }
+
     /// What the host's `_peer.txt` says about this PC. The game folder stays out of it, since its
     /// path can hold the player's user name.
     fn peer_info(&self) -> PeerInfo {
@@ -393,11 +410,18 @@ impl Core {
             own_id: self.settings.install_id.clone(),
             extra_paths: self.settings.extra_paths.clone(),
             folder,
+            hub: Hub::new(self.data_dir.join("mod-cache")),
+            mods: self.new_mod_player(),
         };
-        // The host's own logs go into the session folder like everyone else's.
+        // The host's own logs go into the session folder like everyone else's, and its own mods
+        // through the hub like everyone else's.
         let has = host.collector.welcome(&host.own_id, &self.me.name, self.peer_info());
         if let Some(own) = &mut host.own {
             own.resume(&has);
+        }
+        host.hub.joined(&host.own_id, &self.me.name);
+        if let Some(mods) = &mut host.mods {
+            mods.connected(true);
         }
         host.players.insert(
             1,
@@ -420,6 +444,7 @@ impl Core {
         );
 
         let mut tries = 0usize;
+        let mut connected_before = false;
         loop {
             if !self.show_hosting(&host) {
                 return Ended::AppClosing;
@@ -459,6 +484,12 @@ impl Core {
             host.link = Link::Connected { latency_ms: 0 };
             host.problem = None;
             let _ = link.ping().await;
+            // The relay drops what testers send while the host is away, and the host's own sends
+            // failed, so every tester still there starts again from what the host has.
+            if connected_before {
+                send_all(&mut link, host.welcome_again(&self.me.name)).await;
+            }
+            connected_before = true;
 
             let mut ping = tokio::time::interval(PING_EVERY);
             let mut tick = tokio::time::interval(Duration::from_secs(1));
@@ -475,13 +506,7 @@ impl Core {
                         HostEvent::Message { from, data } => {
                             if let Some(message) = decode::<ToHost>(&data) {
                                 let replies = host.receive(from, message, &self.me.name, &self.settings.extra_paths);
-                                for (to, reply) in replies {
-                                    let sent = match to {
-                                        Some(t) => link.send_to(&t, &encode(&reply)).await,
-                                        None => link.send_to_everyone(&encode(&reply)).await,
-                                    };
-                                    if sent.is_err() { break; }
-                                }
+                                send_all(&mut link, replies).await;
                             }
                         }
                         HostEvent::TesterLeft(tester) => {
@@ -500,7 +525,9 @@ impl Core {
                             return Ended::ByPlayer;
                         }
                         Ok(command) => {
-                            if self.common_command(command) {
+                            if let Some(command) = mod_command(&mut host.mods, command)
+                                && self.common_command(command)
+                            {
                                 link.stop().await;
                                 return Ended::Restart;
                             }
@@ -524,6 +551,8 @@ impl Core {
                             }
                         }
                         host.collect();
+                        let out = host.share_mods();
+                        send_all(&mut link, out).await;
                     }
                 }
             }
@@ -547,8 +576,8 @@ impl Core {
                     p
                 })
                 .collect(),
-            shared: Vec::new(),
-            my_mods: Vec::new(),
+            shared: host.mods.as_ref().map(|m| m.shared().into_iter().map(shared_mod).collect()).unwrap_or_default(),
+            my_mods: host.mods.as_ref().map(|m| m.my_mods().into_iter().map(my_mod).collect()).unwrap_or_default(),
             logs: LogsLine::Host { folder: host.folder.clone() },
             problem: host.problem.clone(),
         }))
@@ -581,6 +610,8 @@ impl Core {
             problem: None,
             sender: self.new_sender(Vec::new()),
             welcomed: false,
+            mods: self.new_mod_player(),
+            doing: Doing::Nothing,
         };
         let mut tries = 0usize;
         loop {
@@ -658,17 +689,27 @@ impl Core {
                     event = link.next() => match event {
                         TesterEvent::Message(data) => match decode::<ToTester>(&data) {
                             Some(ToTester::Players(players)) => joined.players = players,
-                            // The host sends another when its extra paths change.
+                            // The host sends another when its extra paths change, or its socket came back.
                             Some(ToTester::Welcome(welcome)) => joined.welcome(welcome),
+                            Some(ToTester::Mods(message)) => {
+                                let answers = joined.mods.as_mut().map(|m| m.on_message(&message)).unwrap_or_default();
+                                for answer in answers {
+                                    if link.send(&encode(&ToHost::Mods(answer))).await.is_err() {
+                                        break;
+                                    }
+                                }
+                            }
                             _ => {}
                         },
                         TesterEvent::Ended(_) => {
                             joined.link = Link::WaitingForHost;
                             joined.players.clear();
+                            joined.dropped();
                             break;
                         }
                         TesterEvent::Dropped => {
                             joined.link = Link::Reconnecting;
+                            joined.dropped();
                             break;
                         }
                     },
@@ -678,7 +719,9 @@ impl Core {
                             return Ended::ByPlayer;
                         }
                         Ok(command) => {
-                            if self.common_command(command) {
+                            if let Some(command) = mod_command(&mut joined.mods, command)
+                                && self.common_command(command)
+                            {
                                 link.leave().await;
                                 return Ended::Restart;
                             }
@@ -692,8 +735,18 @@ impl Core {
                     _ = logs.tick() => {
                         // A message lost to a drop is sent again after the next Welcome, from what
                         // the host has, so a failed send needs nothing more here.
-                        for message in joined.sender.as_mut().map(Sender::tick).unwrap_or_default() {
-                            if link.send(&encode(&ToHost::Logs(message))).await.is_err() {
+                        let mut out: Vec<ToHost> = joined.sender.as_mut().map(Sender::tick).unwrap_or_default().into_iter().map(ToHost::Logs).collect();
+                        if let Some(mods) = &mut joined.mods {
+                            out.extend(mods.tick().into_iter().map(ToHost::Mods));
+                            // The host shows what this PC's mods are doing on its row.
+                            let doing = mods.doing();
+                            if doing != joined.doing {
+                                joined.doing = doing.clone();
+                                out.push(ToHost::Doing(doing));
+                            }
+                        }
+                        for message in out {
+                            if link.send(&encode(&message)).await.is_err() {
                                 break;
                             }
                         }
@@ -747,8 +800,8 @@ impl Core {
             link: joined.link.clone(),
             host_name: host.clone(),
             players,
-            shared: Vec::new(),
-            my_mods: Vec::new(),
+            shared: joined.mods.as_ref().map(|m| m.shared().into_iter().map(shared_mod).collect()).unwrap_or_default(),
+            my_mods: joined.mods.as_ref().map(|m| m.my_mods().into_iter().map(my_mod).collect()).unwrap_or_default(),
             logs: LogsLine::Tester { host, sending },
             problem,
         }))
@@ -784,9 +837,80 @@ struct Hosting {
     /// The extra paths every player's PC has heard in its latest Welcome.
     extra_paths: Vec<String>,
     folder: PathBuf,
+    /// Every shared file goes through the hub on the host's PC.
+    hub: Hub,
+    /// The host's own mods, or `None` when this PC has no game.
+    mods: Option<ModPlayer>,
 }
 
 impl Hosting {
+    /// The relay's ID for the player with this install ID, while their socket is open.
+    fn tester_of(&self, install_id: &str) -> Option<TesterId> {
+        self.players.values().find(|e| e.install_id == install_id).and_then(|e| e.tester)
+    }
+
+    /// Gives the hub and the host's own mods a turn, and returns what goes to the testers.
+    fn share_mods(&mut self) -> Vec<(Option<TesterId>, ToTester)> {
+        let mut from_hub = self.hub.tick();
+        if let Some(mods) = &mut self.mods {
+            for message in mods.tick() {
+                from_hub.extend(self.hub.on_message(&self.own_id, &message));
+            }
+        }
+        let mut out = self.route(from_hub);
+        // The host's row shows what its own mods are doing, as a tester's does.
+        let doing = self.mods.as_ref().map(ModPlayer::doing).unwrap_or(Doing::Nothing);
+        if let Some(entry) = self.players.get_mut(&1)
+            && entry.info.doing != doing
+        {
+            entry.info.doing = doing;
+            out.push((None, ToTester::Players(self.list())));
+        }
+        out
+    }
+
+    /// Delivers the hub's messages: the host's own Player's in-process, and its answers back to
+    /// the hub, until none are left; the testers' to send.
+    fn route(&mut self, from_hub: Vec<(Target, Vec<u8>)>) -> Vec<(Option<TesterId>, ToTester)> {
+        let mut queue = std::collections::VecDeque::from(from_hub);
+        let mut out = Vec::new();
+        while let Some((target, message)) = queue.pop_front() {
+            let to_me = match &target {
+                Target::Everyone => {
+                    out.push((None, ToTester::Mods(message.clone())));
+                    true
+                }
+                Target::Player(id) if *id == self.own_id => true,
+                Target::Player(id) => {
+                    if let Some(tester) = self.tester_of(id) {
+                        out.push((Some(tester), ToTester::Mods(message.clone())));
+                    }
+                    false
+                }
+            };
+            if to_me && let Some(mods) = &mut self.mods {
+                for answer in mods.on_message(&message) {
+                    queue.extend(self.hub.on_message(&self.own_id, &answer));
+                }
+            }
+        }
+        out
+    }
+
+    /// A Welcome again for every tester still connected, after the host's socket came back: their
+    /// logs go on from what the host has, and their mods start over with the hub.
+    fn welcome_again(&mut self, host_name: &str) -> Vec<(Option<TesterId>, ToTester)> {
+        let mut out = Vec::new();
+        for entry in self.players.values() {
+            let Some(tester) = entry.tester else { continue };
+            let peer = PeerInfo { game_folder: String::new(), game_version: entry.info.game.version.clone(), system: entry.info.system.clone() };
+            let logs = self.collector.welcome(&entry.install_id, &entry.info.name, peer);
+            self.hub.left(&entry.install_id);
+            self.hub.joined(&entry.install_id, &entry.info.name);
+            out.push((Some(tester), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: entry.info.id, extra_paths: self.extra_paths.clone(), logs })));
+        }
+        out
+    }
     /// Gives the host's own logs a turn, straight into the Collector, and the Collector its own.
     fn collect(&mut self) {
         if let Some(own) = &mut self.own {
@@ -860,6 +984,10 @@ impl Hosting {
                 // The tester's PC goes on from what the host already has of its logs.
                 let peer = PeerInfo { game_folder: String::new(), game_version: entry.info.game.version.clone(), system: entry.info.system.clone() };
                 let logs = self.collector.welcome(&hello.install_id, &entry.info.name, peer);
+                // A tester who comes back on a new socket left the hub on the old one's close, or
+                // is still in it when the relay hasn't said yet.
+                self.hub.left(&hello.install_id);
+                self.hub.joined(&hello.install_id, &entry.info.name);
                 vec![
                     (Some(from), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: id, extra_paths: extra_paths.to_vec(), logs })),
                     (None, ToTester::Players(self.list())),
@@ -881,8 +1009,13 @@ impl Hosting {
                 }
                 Vec::new()
             }
-            // Stage 6 of record/areas/product/plan.md passes these to coop-mods.
-            ToHost::Mods(_) => Vec::new(),
+            ToHost::Mods(message) => {
+                let Some(install_id) = self.by_tester.get(&from).and_then(|id| self.players.get(id)).map(|e| e.install_id.clone()) else {
+                    return Vec::new();
+                };
+                let from_hub = self.hub.on_message(&install_id, &message);
+                self.route(from_hub)
+            }
         }
     }
 
@@ -893,6 +1026,7 @@ impl Hosting {
             entry.tester = None;
             entry.left = Some(Instant::now());
             self.collector.left(&entry.install_id);
+            self.hub.left(&entry.install_id);
         }
         true
     }
@@ -915,16 +1049,37 @@ struct Joining {
     sender: Option<Sender>,
     /// A Welcome came, so the Sender has somewhere to send.
     welcomed: bool,
+    /// This PC's mods, or `None` when it has no game.
+    mods: Option<ModPlayer>,
+    /// What the host last heard this PC's mods were doing.
+    doing: Doing,
 }
 
 impl Joining {
     fn welcome(&mut self, welcome: Welcome) {
         self.host_name = welcome.host_name;
         self.me = Some(welcome.player_id);
-        self.welcomed = true;
         if let Some(sender) = &mut self.sender {
             sender.set_extra_paths(welcome.extra_paths);
             sender.resume(&welcome.logs);
+        }
+        if let Some(mods) = &mut self.mods {
+            // A second Welcome means the host started this PC over with the hub, so the Player
+            // does too.
+            if self.welcomed {
+                mods.connected(false);
+            }
+            mods.connected(true);
+        }
+        self.welcomed = true;
+        // The host knows nothing yet of what this PC's mods are doing.
+        self.doing = Doing::Nothing;
+    }
+
+    /// The link to the host closed.
+    fn dropped(&mut self) {
+        if let Some(mods) = &mut self.mods {
+            mods.connected(false);
         }
     }
 }
@@ -951,6 +1106,99 @@ fn player(info: &PlayerInfo, me: u64, reconnecting: bool) -> Player {
             }
         },
         sources: None,
+    }
+}
+
+/// Sends the host's messages, `None` meaning every tester, and stops at the first that fails,
+/// since the socket is gone and the loop finds out next.
+async fn send_all(link: &mut HostLink, out: Vec<(Option<TesterId>, ToTester)>) {
+    for (to, message) in out {
+        let sent = match to {
+            Some(tester) => link.send_to(&tester, &encode(&message)).await,
+            None => link.send_to_everyone(&encode(&message)).await,
+        };
+        if sent.is_err() {
+            break;
+        }
+    }
+}
+
+/// Takes the window's commands for this PC's mods, and hands back any other.
+fn mod_command(mods: &mut Option<ModPlayer>, command: Command) -> Option<Command> {
+    let Some(mods) = mods else { return Some(command) };
+    match command {
+        Command::Share { key, on } => mods.share(&key, on),
+        Command::Follow { key, on: true } => mods.follow(&key),
+        Command::Follow { key, on: false } => {
+            if let Err(e) = mods.unfollow(&key, false) {
+                log::warn!("couldn't stop following {key}: {e}");
+            }
+        }
+        Command::Unfollow { key, delete_copy } => {
+            if let Err(e) = mods.unfollow(&key, delete_copy) {
+                log::warn!("couldn't stop following {key}: {e}");
+            }
+        }
+        Command::TakeAddedFolder { key } => mods.take_added_folder(&key),
+        other => return Some(other),
+    }
+    None
+}
+
+fn place(p: coop_mods::Place) -> Place {
+    match p {
+        coop_mods::Place::Cet => Place::Cet,
+        coop_mods::Place::Red4ext => Place::Red4ext,
+        coop_mods::Place::Redscript => Place::Redscript,
+        coop_mods::Place::TweakXl => Place::TweakXl,
+        coop_mods::Place::InputLoader => Place::InputLoader,
+        coop_mods::Place::Archive => Place::Archive,
+        coop_mods::Place::Redmod => Place::Redmod,
+    }
+}
+
+fn my_mod(m: coop_mods::MyMod) -> MyMod {
+    MyMod { key: m.key, name: m.name, places: m.places.into_iter().map(place).collect(), bytes: m.bytes, shared: m.shared, loose_file: m.loose_file }
+}
+
+fn delivery(d: coop_mods::Delivery) -> Delivery {
+    match d {
+        coop_mods::Delivery::UpToDate => Delivery::UpToDate,
+        coop_mods::Delivery::Fetching { done, total } => Delivery::Fetching { done, total },
+        coop_mods::Delivery::NeedsRestart => Delivery::NeedsRestart,
+        coop_mods::Delivery::Paused => Delivery::Paused,
+    }
+}
+
+fn shared_mod(m: coop_mods::SharedMod) -> SharedMod {
+    use coop_mods::ModStatus as S;
+    SharedMod {
+        key: m.key,
+        name: m.name,
+        sharer: m.sharer,
+        mine: m.mine,
+        follow: match m.follow {
+            coop_mods::Follow::No => Follow::No,
+            coop_mods::Follow::Yes => Follow::Yes,
+            coop_mods::Follow::AddedFolder => Follow::AddedFolder,
+        },
+        has_dll: m.has_dll,
+        status: match m.status {
+            S::UpToDate => ModStatus::UpToDate,
+            S::Fetching { done, total } => ModStatus::Fetching { done, total },
+            S::NeedsRestart => ModStatus::NeedsRestart,
+            S::Checking => ModStatus::Checking,
+            S::NotOnYourPc => ModStatus::NotOnYourPc,
+            S::OnYourPc { same } => ModStatus::OnYourPc { same },
+            S::AddedFolder => ModStatus::AddedFolder,
+            S::Paused => ModStatus::Paused,
+            S::FollowedElsewhere { by } => ModStatus::FollowedElsewhere { by },
+            S::NotShared => ModStatus::NotShared,
+            S::OfferedToo => ModStatus::OfferedToo,
+            S::Sharing => ModStatus::Sharing,
+        },
+        changed: (m.changed > 0).then(|| Local.timestamp_opt(m.changed, 0).single()).flatten(),
+        followers: m.followers.into_iter().map(|f| Follower { name: f.name, delivery: delivery(f.delivery) }).collect(),
     }
 }
 
