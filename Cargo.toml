@@ -2,7 +2,7 @@
 # version of the root package, versions the program.
 [package]
 name = "choom-collector"
-version = "0.4.0"
+version = "0.4.1"
 edition.workspace = true
 description = "Test Cyberpunk 2077 mods with friends: the host's builds go out, everyone's logs come back."
 license = "MIT"
