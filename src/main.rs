@@ -3,5 +3,5 @@ fn main() {
     // so this comes before anything else.
     velopack::VelopackApp::build().run();
 
-    println!("CP77 Co-op Tools {}", env!("CARGO_PKG_VERSION"));
+    println!("Cyberpunk Co-op Tools {}", env!("CARGO_PKG_VERSION"));
 }

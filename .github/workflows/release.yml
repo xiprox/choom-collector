@@ -19,6 +19,8 @@ permissions:
 env:
   # Keep in step with the velopack crate's version in Cargo.toml.
   VPK_VERSION: 1.2.161
+  # Velopack's id for the app. Installs update only from packages with the same id.
+  PACK_ID: cyberpunk-coop-tools
 
 jobs:
   release-please:
@@ -48,10 +50,10 @@ jobs:
           # on the shared release (a non-default channel is part of every file name).
           - os: windows-latest
             channel: win-x64
-            exe: cp77-coop-tools.exe
+            exe: cyberpunk-coop-tools.exe
           - os: ubuntu-22.04
             channel: linux-x64
-            exe: cp77-coop-tools
+            exe: cyberpunk-coop-tools
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -89,23 +91,25 @@ jobs:
 
       # Delta packages are made against the previous release's full package, so fetch it
       # first. The newest release is the one just created, still empty, so this looks for
-      # the newest published release other than it.
+      # the newest published release other than it. A release whose package has another id
+      # (0.1.0 went out as cp77-coop-tools) can't be a delta base, so it's skipped.
       - name: Fetch the previous release
         if: github.event_name == 'push'
         run: |
           mkdir -p Releases
           prev=$(gh release list --exclude-drafts --json tagName --jq '.[].tagName' | grep -vxF "$TAG" | head -n 1 || true)
-          if [ -n "$prev" ]; then
-            echo "Previous release: $prev"
-            gh release download "$prev" -D Releases \
-              -p "releases.$CHANNEL.json" -p "*-$CHANNEL-full.nupkg" || echo "No $CHANNEL packages in $prev"
-          else
+          if [ -z "$prev" ]; then
             echo "First release: no delta packages."
+          elif gh release view "$prev" --json assets --jq '.assets[].name' | grep -qE "^${PACK_ID}-.+-${CHANNEL}-full\.nupkg$"; then
+            echo "Previous release: $prev"
+            gh release download "$prev" -D Releases -p "releases.$CHANNEL.json" -p "${PACK_ID}-*-$CHANNEL-full.nupkg"
+          else
+            echo "$prev has no $PACK_ID $CHANNEL package: no delta packages."
           fi
 
       - name: Pack
         run: |
-          vpk pack -u cp77-coop-tools --packTitle "CP77 Co-op Tools" -v "$VERSION" \
+          vpk pack -u "$PACK_ID" --packTitle "Cyberpunk Co-op Tools" -v "$VERSION" \
             -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases
 
       - name: Attach to the release
