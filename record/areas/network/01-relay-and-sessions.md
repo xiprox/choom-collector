@@ -36,7 +36,7 @@ It keeps one Durable Object per code, rebuilds its list of sockets from the sock
 - The resume token proves the host only while the session lives.
   When the session ends the relay deletes the token, and the code is free for the next host that opens it (read in fsc-editor, `relay/src/index.ts`, `endSession`).
   With about 729 million codes, another host picking the same one is unlikely, but possible.
-- TBD: what a host does when its kept code is refused with 409 or 403 because another host holds it; stage 3 settles it.
+- When another host holds a host's kept code, the relay refuses it with 409 or 403, and the host's window says "another host is using this code" and offers New code.
 
 ## The first messages
 

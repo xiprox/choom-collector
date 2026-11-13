@@ -7,6 +7,7 @@ The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [wr
 - [areas/product/02-v1-scope.md](areas/product/02-v1-scope.md): what each feature of v1 does, and which of CP77 Log Collector's behaviors it keeps, changes, or drops.
 - [areas/architecture/01-spine.md](areas/architecture/01-spine.md): the crates, what runs on which thread, how state reaches the window, and where the app's files live.
 - [areas/network/01-relay-and-sessions.md](areas/network/01-relay-and-sessions.md): the relay's endpoints and frames, codes, the first messages, and reconnecting.
+- [areas/network/log.md](areas/network/log.md): what the relay's tests found about routing, a host's drop, and refusals.
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
 - [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
 - [areas/build/log.md](areas/build/log.md): what the release pipeline produced, and what's untested in it.

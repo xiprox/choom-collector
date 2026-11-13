@@ -24,6 +24,8 @@ Done on 2026-11-13: the pictures are in `experiments/areas/interface/stage-2/` (
 
 Exit: under `wrangler dev`, a test's host and two testers exchange messages, the host hears a tester leave, and a host that drops and returns within 30s keeps its testers.
 
+Done on 2026-11-13: `src/core/tests/relay.rs` passes against the fork ([network log](../network/log.md#2026-11-13-the-forked-relay-carries-binary-frames-between-a-host-and-two-testers-and-keeps-the-testers-through-a-hosts-drop)).
+
 ## 4. Sessions
 
 Settings, the first run, hosting and joining on start, players and their state, and reconnecting, with the window on real state.

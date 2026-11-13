@@ -10,3 +10,10 @@ coop-logs = { path = "../logs" }
 coop-mods = { path = "../mods" }
 async-channel = "2"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "time", "sync"] }
+tokio-tungstenite = { version = "0.30.0", features = ["rustls-tls-webpki-roots"] }
+futures-util = "0.3.34"
+anyhow = "1.0.104"
+serde_json = "1.0.154"
+rand = "0.10.3"
+serde = { version = "1.0.229", features = ["derive"] }

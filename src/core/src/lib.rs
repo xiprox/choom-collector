@@ -3,6 +3,7 @@
 //! drawing the [`state::Snapshot`]s it sends back.
 
 pub mod demo;
+pub mod relay;
 pub mod state;
 
 use std::path::PathBuf;

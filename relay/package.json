@@ -1,0 +1,16 @@
+{
+  "name": "cyberpunk-coop-tools-relay",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260816.1",
+    "typescript": "~6",
+    "wrangler": "^4.123.0"
+  }
+}

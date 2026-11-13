@@ -1,0 +1,25 @@
+name = "cyberpunk-coop-tools-relay"
+main = "src/index.ts"
+compatibility_date = "2026-08-01"
+
+# One instance per session code, addressed by `idFromName(code)`.
+[[durable_objects.bindings]]
+name = "SESSIONS"
+class_name = "Session"
+
+# `new_sqlite_classes`: the SQLite backend is the one Cloudflare's free plan offers for Durable
+# Objects (read in fsc-editor, relay/wrangler.toml).
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Session"]
+
+# Limits joins from one IP address, checked in the Worker before any Durable Object exists, so a
+# sweep of codes costs one cheap request each. `period` takes only 10 or 60, and Cloudflare counts
+# per location, which fits a sweep from one place.
+[[ratelimits]]
+name = "JOIN_LIMIT"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 20
+  period = 60
