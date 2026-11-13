@@ -10,6 +10,22 @@ use chrono::{DateTime, Local};
 pub struct Snapshot {
     pub app_version: String,
     pub screen: Screen,
+    /// A newer version downloaded and ready to install, by its version.
+    pub update: Option<String>,
+    /// What the Settings page shows, once setup is done.
+    pub settings: Option<SettingsView>,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct SettingsView {
+    pub role: Option<Role>,
+    pub relay: String,
+    pub code: String,
+    pub logs_folder: PathBuf,
+    pub extra_paths: Vec<String>,
+    pub never_share: Vec<String>,
+    /// The app's own log, which a player sends along when the app itself misbehaves.
+    pub app_log: PathBuf,
 }
 
 #[derive(Clone, Debug)]
@@ -268,8 +284,21 @@ pub enum Command {
     NewCode,
     SetGameFolder(PathBuf),
     SetLogsFolder(PathBuf),
+    SaveSettings(SettingsAnswers),
+    /// Installs the downloaded update and starts the new version.
+    ApplyUpdate,
     Stop,
     Leave,
+}
+
+/// What the Settings page saves.
+#[derive(Clone, Debug)]
+pub struct SettingsAnswers {
+    pub relay: String,
+    pub code: String,
+    pub logs_folder: PathBuf,
+    pub extra_paths: Vec<String>,
+    pub never_share: Vec<String>,
 }
 
 #[derive(Clone, Debug)]

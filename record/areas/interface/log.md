@@ -1,5 +1,17 @@
 # Interface log
 
+## 2026-11-13: Settings and the update button went straight into the window, with no frames first
+
+We asked whether Settings and an available update, the two things the frames left undrawn, could be built in gpui directly and checked in pictures, since the user moved layout checks into the real app ("we can just build and then check layout there").
+We expected the page's buttons to need a fixed footer.
+
+`--demo host` shows "Restart to update" for a made-up 0.2.0, and a click on the sliders opens Settings; the pictures `tools/capture-window.ps1` took are in `experiments/areas/interface/stage-7/` (Windows 11, 96 dpi, 2026-11-13).
+
+- The host's page runs past 700px, so Save and Cancel went into its title bar instead of a footer, where they show however far the page scrolls.
+- gpui-component's `TextareaState` grows from 3 to 8 lines with its content, which fits a list of patterns, one a line.
+- The update button is 24px tall, as the title bar's other buttons, and filled in the accent, as the one thing waiting on the player.
+- A run of a build-folder copy logs "This application is not properly installed" from Velopack's check and carries on, so only an installed copy checks for updates.
+
 ## 2026-11-13: The window draws every frame in gpui from made-up state
 
 We asked whether gpui and gpui-component can draw the frames in `experiments/areas/interface/frames/` as they are, fed by `coop-core`'s snapshots, before any session is real.

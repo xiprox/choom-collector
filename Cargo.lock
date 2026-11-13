@@ -960,6 +960,7 @@ dependencies = [
  "coop-proto",
  "dirs 7.0.0",
  "futures-util",
+ "log",
  "pelite",
  "rand 0.10.3",
  "serde",
@@ -967,6 +968,7 @@ dependencies = [
  "tokio",
  "tokio-tungstenite",
  "toml 1.2.1+spec-1.1.0",
+ "velopack",
  "winreg",
 ]
 

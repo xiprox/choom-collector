@@ -3,6 +3,7 @@
 
 mod assets;
 mod session;
+mod settings;
 mod setup;
 mod theme;
 mod ui;

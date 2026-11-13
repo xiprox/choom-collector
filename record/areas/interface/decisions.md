@@ -93,8 +93,26 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   - A loose file named after a mod marks the mod's row with a warning, and its tooltip says where to move the file.
 - **Because:** mods run code inside the game, and CP77 Log Collector asks the same questions (read in CP77 Log Collector, README.md, "Sharing mods").
 
+## Settings is a page the sliders open
+
+- **Decided:**
+  - The sliders in the title bar open Settings in place of the session, with Cancel and Save in its title bar.
+  - Everyone sees the relay, the code, the patterns never sent from their own shared mods, the version, and the app's log with Show.
+    The host also sees New code, the logs folder, and the extra files every player's PC picks up, one a line.
+  - Save checks the relay and the code first, and says what's wrong in trouble's color under the title bar.
+  - A new relay or code starts the session again with it; the rest applies at once.
+- **Because:** the user made the relay a one-time setting, the code one that's remembered, and the extra paths a host setting for every tester (round 6 of [the log entry](log.md#2026-11-13-six-rounds-of-mockups-settled-the-window-two-panels-one-for-every-role-plain-with-color-that-means-something)), so changing any of them is rare and stays off the main window.
+  Save and Cancel sit in the title bar because the host's page runs past the window's height ([log](log.md#2026-11-13-settings-and-the-update-button-went-straight-into-the-window-with-no-frames-first)).
+- **Leaves out:** the game folder, which Stop or Leave, then setup's Change, already covers.
+
+## An update waits for the player's restart
+
+- **Decided:** the app checks the project's GitHub releases 5s after it starts and every 6 hours after, and downloads what it finds.
+  Then "Restart to update" shows in the title bar, filled in the accent, with the version in its tooltip, and beside the version in Settings.
+  Nothing installs until the player presses it.
+- **Because:** a restart drops the player from the session for a moment, so the player picks when, and the accent marks what's waiting on them.
+- **Leaves out:** release notes, which the release's page on GitHub has.
+
 ## Not drawn yet
 
-- The Settings window: the host's extra paths and the sharer's own patterns to leave out, the logs folder, the relay and code, and the version.
-- How an available update shows.
 - The window before anyone has shared a mod, and a session with one player.

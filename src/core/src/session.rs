@@ -5,10 +5,11 @@
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use anyhow::Result;
-use chrono::{Local, TimeZone as _};
+use chrono::{DateTime, Local, TimeZone as _};
 use coop_proto::{Doing, GameInfo, Hello, PROTOCOL, PlayerInfo, ToHost, ToTester, Welcome, decode, encode};
 use tokio::time::{sleep, timeout};
 
@@ -23,7 +24,7 @@ const TESTER_GRACE: Duration = Duration::from_secs(60);
 const RETRIES: [Duration; 4] = [Duration::from_millis(500), Duration::from_millis(1500), Duration::from_secs(4), Duration::from_secs(8)];
 const PING_EVERY: Duration = Duration::from_secs(10);
 
-pub fn start(data_dir: PathBuf, app_version: String, name: Option<String>) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
+pub fn start(data_dir: PathBuf, app_log: PathBuf, app_version: String, name: Option<String>) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
     let (command_tx, command_rx) = async_channel::unbounded::<Command>();
     let (snapshot_tx, snapshot_rx) = async_channel::unbounded::<Snapshot>();
     std::thread::Builder::new()
@@ -31,15 +32,87 @@ pub fn start(data_dir: PathBuf, app_version: String, name: Option<String>) -> (a
         .spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("the core's runtime should start");
             runtime.block_on(async move {
-                let mut core = Core::new(data_dir, app_version, command_rx, snapshot_tx).await;
+                let mut core = Core::new(data_dir, app_log, app_version, command_rx, snapshot_tx).await;
                 if let Some(name) = name {
                     core.me.name = name;
                 }
+                tokio::spawn(updates::watch(core.update.clone(), core.last.clone(), core.snapshots.clone()));
                 core.run().await;
             });
         })
         .expect("the core's thread should start");
     (command_tx, snapshot_rx)
+}
+
+mod updates {
+    //! Velopack's update check against the project's GitHub releases, a few seconds after start
+    //! and every 6 hours after, downloading what it finds so the player only has to restart
+    //! (record/decisions/004-releases-with-release-please-and-velopack.md).
+
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+
+    use velopack::sources::GithubSource;
+    use velopack::{UpdateCheck, UpdateInfo, UpdateManager};
+
+    use crate::state::Snapshot;
+
+    const RELEASES: &str = "https://github.com/xiprox/cyberpunk-coop-tools";
+
+    pub struct Ready {
+        pub version: String,
+        manager: UpdateManager,
+        info: UpdateInfo,
+    }
+
+    impl Ready {
+        /// Installs the update and starts the new version; the process ends here when it works.
+        pub fn apply(&self) {
+            if let Err(e) = self.manager.apply_updates_and_restart(&self.info) {
+                log::warn!("couldn't install the update to {}: {e}", self.version);
+            }
+        }
+    }
+
+    pub type Slot = Arc<Mutex<Option<Ready>>>;
+
+    /// Checks until an update is ready, then sends the window its last snapshot again with the
+    /// update in it, so the button shows even while nothing else changes.
+    pub async fn watch(slot: Slot, last: Arc<Mutex<Option<Snapshot>>>, snapshots: async_channel::Sender<Snapshot>) {
+        tokio::time::sleep(Duration::from_secs(5)).await;
+        loop {
+            let found = tokio::task::spawn_blocking(|| -> Result<Option<Ready>, velopack::Error> {
+                // An app run from a build folder, not installed by Velopack, can't update, and says so here.
+                let manager = UpdateManager::new(GithubSource::new(RELEASES, None, false), None, None)?;
+                match manager.check_for_updates()? {
+                    UpdateCheck::UpdateAvailable(info) => {
+                        manager.download_updates(&info, None)?;
+                        Ok(Some(Ready { version: info.TargetFullRelease.Version.clone(), manager, info: *info }))
+                    }
+                    _ => Ok(None),
+                }
+            })
+            .await;
+            match found {
+                Ok(Ok(Some(ready))) => {
+                    log::info!("downloaded the update to {}", ready.version);
+                    let version = ready.version.clone();
+                    *slot.lock().expect("the update slot isn't poisoned") = Some(ready);
+                    // Sent under the lock `Core::show` takes too, so this can't overtake a newer snapshot.
+                    let mut last = last.lock().expect("the last snapshot isn't poisoned");
+                    if let Some(snapshot) = last.as_mut() {
+                        snapshot.update = Some(version);
+                        let _ = snapshots.try_send(snapshot.clone());
+                    }
+                    return;
+                }
+                Ok(Ok(None)) => {}
+                Ok(Err(e)) => log::info!("no update check: {e}"),
+                Err(e) => log::warn!("the update check stopped: {e}"),
+            }
+            tokio::time::sleep(Duration::from_secs(6 * 60 * 60)).await;
+        }
+    }
 }
 
 /// What this PC is, found once at start.
@@ -51,27 +124,33 @@ struct Me {
 
 struct Core {
     data_dir: PathBuf,
+    app_log: PathBuf,
     app_version: String,
     settings: Settings,
     me: Me,
     commands: async_channel::Receiver<Command>,
     snapshots: async_channel::Sender<Snapshot>,
+    /// The snapshot sent last, for sending again when only the settings or the update changed.
+    last: Arc<Mutex<Option<Snapshot>>>,
     /// The setup screen's state while it shows; the first run's, or after Stop or Leave.
     setup: Option<Setup>,
+    update: updates::Slot,
 }
 
 /// Why a session's loop returned.
 enum Ended {
     /// The player stopped or left; show setup.
     ByPlayer,
+    /// Settings changed the relay or the code; start the session again with them.
+    Restart,
     /// The window is gone.
     AppClosing,
 }
 
 impl Core {
-    async fn new(data_dir: PathBuf, app_version: String, commands: async_channel::Receiver<Command>, snapshots: async_channel::Sender<Snapshot>) -> Self {
+    async fn new(data_dir: PathBuf, app_log: PathBuf, app_version: String, commands: async_channel::Receiver<Command>, snapshots: async_channel::Sender<Snapshot>) -> Self {
         let settings = Settings::load(&data_dir).unwrap_or_else(|e| {
-            eprintln!("{e:#}");
+            log::warn!("{e:#}");
             Settings::default()
         });
         let saved_game = settings.game_folder.clone();
@@ -82,11 +161,63 @@ impl Core {
         })
         .await
         .expect("finding the game shouldn't panic");
-        Self { data_dir, app_version, settings, me, commands, snapshots, setup: None }
+        Self { data_dir, app_log, app_version, settings, me, commands, snapshots, last: Default::default(), setup: None, update: Default::default() }
     }
 
     fn show(&self, screen: Screen) -> bool {
-        self.snapshots.try_send(Snapshot { app_version: self.app_version.clone(), screen }).is_ok()
+        let settings = self.settings.role.map(|role| SettingsView {
+            role: Some(role.into()),
+            relay: self.settings.relay.clone(),
+            code: self.settings.code.clone(),
+            logs_folder: self.settings.logs_folder.clone().unwrap_or_else(default_logs_folder),
+            extra_paths: self.settings.extra_paths.clone(),
+            never_share: self.settings.never_share.clone(),
+            app_log: self.app_log.clone(),
+        });
+        let update = self.update.lock().ok().and_then(|u| u.as_ref().map(|r| r.version.clone()));
+        let snapshot = Snapshot { app_version: self.app_version.clone(), screen, update, settings };
+        let mut last = self.last.lock().expect("the last snapshot isn't poisoned");
+        *last = Some(snapshot.clone());
+        self.snapshots.try_send(snapshot).is_ok()
+    }
+
+    /// Sends the last screen again, with the settings as they are now.
+    fn show_again(&self) {
+        let screen = self.last.lock().expect("the last snapshot isn't poisoned").as_ref().map(|s| s.screen.clone());
+        if let Some(screen) = screen {
+            self.show(screen);
+        }
+    }
+
+    /// Handles the commands any screen of a session takes: true when the session must start again.
+    fn common_command(&mut self, command: Command) -> bool {
+        match command {
+            Command::ApplyUpdate => self.apply_update(),
+            Command::SaveSettings(answers) => {
+                if self.save_settings(answers) {
+                    return true;
+                }
+                self.show_again();
+            }
+            _ => {}
+        }
+        false
+    }
+
+    fn apply_update(&self) {
+        let slot = self.update.lock().expect("the update slot isn't poisoned");
+        if let Some(ready) = slot.as_ref() {
+            ready.apply();
+        }
+    }
+
+    /// Saves the Settings page's answers; true when the session must start again for them.
+    fn save_settings(&mut self, answers: SettingsAnswers) -> bool {
+        let restart = self.settings.take_answers(answers);
+        if let Err(e) = self.settings.save(&self.data_dir) {
+            log::warn!("{e:#}");
+        }
+        restart
     }
 
     async fn run(&mut self) {
@@ -106,6 +237,7 @@ impl Core {
                 Ended::AppClosing => return,
                 // Stop and Leave show setup, with the answers so far, until the player starts again.
                 Ended::ByPlayer => self.setup = Some(self.setup_screen(None)),
+                Ended::Restart => {}
             }
         }
     }
@@ -150,6 +282,7 @@ impl Core {
                     Ok(()) => return SetupEnd::Done,
                     Err(problem) => setup.error = Some(problem),
                 },
+                Command::ApplyUpdate => self.apply_update(),
                 _ => {}
             }
         }
@@ -201,14 +334,15 @@ impl Core {
 
     // ---------- hosting ----------
 
+    /// The folder this session's logs land in: the logs folder, then one per day and code.
+    fn session_folder(&self, started: DateTime<Local>) -> PathBuf {
+        let logs_folder = self.settings.logs_folder.clone().unwrap_or_else(default_logs_folder);
+        logs_folder.join(format!("{} {}", started.format("%Y-%m-%d"), display_code(&self.settings.code)))
+    }
+
     async fn host(&mut self) -> Ended {
         let started = Local::now();
-        let folder = self
-            .settings
-            .logs_folder
-            .clone()
-            .unwrap_or_else(default_logs_folder)
-            .join(format!("{} {}", started.format("%Y-%m-%d"), display_code(&self.settings.code)));
+        let folder = self.session_folder(started);
         let mut host = Hosting {
             players: BTreeMap::new(),
             by_tester: BTreeMap::new(),
@@ -244,8 +378,9 @@ impl Core {
                 return Ended::AppClosing;
             }
             let resume = (!self.settings.resume.is_empty()).then(|| self.settings.resume.clone());
+            let (relay_address, code) = (self.settings.relay.clone(), self.settings.code.clone());
             let opened = tokio::select! {
-                opened = HostLink::open(&self.settings.relay, &self.settings.code, resume.as_deref()) => opened,
+                opened = HostLink::open(&relay_address, &code, resume.as_deref()) => opened,
                 ended = self.wait_for_stop() => return ended,
             };
             let mut link = match opened {
@@ -271,7 +406,7 @@ impl Core {
             if link.resume != self.settings.resume {
                 self.settings.resume = link.resume.clone();
                 if let Err(e) = self.settings.save(&self.data_dir) {
-                    eprintln!("{e:#}");
+                    log::warn!("{e:#}");
                 }
             }
             host.link = Link::Connected { latency_ms: 0 };
@@ -316,7 +451,14 @@ impl Core {
                             link.stop().await;
                             return Ended::ByPlayer;
                         }
-                        Ok(_) => {}
+                        Ok(command) => {
+                            if self.common_command(command) {
+                                link.stop().await;
+                                return Ended::Restart;
+                            }
+                            // The logs folder may have changed; logs from now on go to the new one.
+                            host.folder = self.session_folder(started);
+                        }
                         Err(_) => {
                             link.stop().await;
                             return Ended::AppClosing;
@@ -348,12 +490,17 @@ impl Core {
         }))
     }
 
-    /// Waits for Stop or Leave while the session isn't connected, so the player can give up.
-    async fn wait_for_stop(&self) -> Ended {
+    /// Waits for Stop or Leave while the session isn't connected, so the player can give up, or
+    /// fix the relay's address in Settings.
+    async fn wait_for_stop(&mut self) -> Ended {
         loop {
             match self.commands.recv().await {
                 Ok(Command::Stop | Command::Leave) => return Ended::ByPlayer,
-                Ok(_) => {}
+                Ok(command) => {
+                    if self.common_command(command) {
+                        return Ended::Restart;
+                    }
+                }
                 Err(_) => return Ended::AppClosing,
             }
         }
@@ -368,8 +515,9 @@ impl Core {
             if !self.show_joining(&joined) {
                 return Ended::AppClosing;
             }
+            let (relay_address, code) = (self.settings.relay.clone(), self.settings.code.clone());
             let opened = tokio::select! {
-                opened = TesterLink::open(&self.settings.relay, &self.settings.code) => opened,
+                opened = TesterLink::open(&relay_address, &code) => opened,
                 ended = self.wait_for_stop() => return ended,
             };
             let mut link = match opened {
@@ -456,7 +604,12 @@ impl Core {
                             link.leave().await;
                             return Ended::ByPlayer;
                         }
-                        Ok(_) => {}
+                        Ok(command) => {
+                            if self.common_command(command) {
+                                link.leave().await;
+                                return Ended::Restart;
+                            }
+                        }
                         Err(_) => {
                             link.leave().await;
                             return Ended::AppClosing;

@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context as _, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::state::Role;
+use crate::relay;
+use crate::state::{Role, SettingsAnswers};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 #[serde(default)]
@@ -25,6 +26,8 @@ pub struct Settings {
     pub install_id: String,
     /// The host's extra paths, relative to the game folder, that every tester's PC picks up.
     pub extra_paths: Vec<String>,
+    /// Patterns of files in this player's shared mods that are never sent, on top of the defaults.
+    pub never_share: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -67,6 +70,27 @@ pub fn default_logs_folder() -> PathBuf {
 impl Settings {
     fn file(data_dir: &Path) -> PathBuf {
         data_dir.join("settings.toml")
+    }
+
+    /// Takes the Settings page's answers; true when the relay or the code changed, so the session
+    /// must start again with them. A blank relay or a code that doesn't read as one keeps the old.
+    pub fn take_answers(&mut self, answers: SettingsAnswers) -> bool {
+        let code = relay::parse_code(&answers.code).unwrap_or_else(|| self.code.clone());
+        let relay = answers.relay.trim().to_string();
+        let restart = (!relay.is_empty() && relay != self.relay) || code != self.code;
+        if restart {
+            // The relay's proof of hosting belongs to the old code.
+            self.resume.clear();
+        }
+        if !relay.is_empty() {
+            self.relay = relay;
+        }
+        self.code = code;
+        self.logs_folder = Some(answers.logs_folder);
+        let lines = |list: Vec<String>| list.into_iter().map(|l| l.trim().to_string()).filter(|l| !l.is_empty()).collect();
+        self.extra_paths = lines(answers.extra_paths);
+        self.never_share = lines(answers.never_share);
+        restart
     }
 
     /// Reads the settings, or starts fresh when there are none yet; an install ID is always set.
@@ -117,5 +141,39 @@ mod tests {
         assert_eq!(again.role, Some(SavedRole::Host));
         assert_eq!(again.code, "K7RM2Q");
         std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    fn answers(relay: &str, code: &str) -> SettingsAnswers {
+        SettingsAnswers {
+            relay: relay.into(),
+            code: code.into(),
+            logs_folder: PathBuf::from("logs"),
+            extra_paths: vec![" bin/x64/a.csv ".into(), "".into()],
+            never_share: vec!["*.psd".into()],
+        }
+    }
+
+    #[test]
+    fn a_new_relay_or_code_restarts_the_session_and_drops_the_resume_token() {
+        let mut s = Settings { relay: "relay.example.net".into(), code: "K7RM2Q".into(), resume: "token".into(), ..Default::default() };
+
+        // Only the lists and the folder changed: the session carries on.
+        assert!(!s.take_answers(answers("relay.example.net", "k7r-m2q")));
+        assert_eq!(s.resume, "token");
+        assert_eq!(s.extra_paths, vec!["bin/x64/a.csv"]);
+        assert_eq!(s.never_share, vec!["*.psd"]);
+        assert_eq!(s.logs_folder, Some(PathBuf::from("logs")));
+
+        // A code that doesn't read as one keeps the old code, and a blank relay the old relay.
+        assert!(!s.take_answers(answers("", "nope")));
+        assert_eq!((s.relay.as_str(), s.code.as_str()), ("relay.example.net", "K7RM2Q"));
+
+        assert!(s.take_answers(answers("relay.example.net", "AB2-CD3")));
+        assert_eq!(s.code, "AB2CD3");
+        assert!(s.resume.is_empty());
+
+        s.resume = "token".into();
+        assert!(s.take_answers(answers("other.example.net", "AB2CD3")));
+        assert!(s.resume.is_empty());
     }
 }

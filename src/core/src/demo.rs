@@ -102,6 +102,20 @@ impl Demo {
         Snapshot {
             app_version: self.app_version.clone(),
             screen: self.screen.clone(),
+            // The host's showcase has an update waiting, so the title bar's button shows somewhere.
+            update: matches!(&self.screen, Screen::Session(s) if s.role == Role::Host).then(|| "0.2.0".to_string()),
+            settings: match &self.screen {
+                Screen::Session(s) => Some(SettingsView {
+                    role: Some(s.role),
+                    relay: s.relay.clone(),
+                    code: s.code.clone(),
+                    logs_folder: PathBuf::from(r"D:\Cyberpunk Logs"),
+                    extra_paths: vec!["bin/x64/StreetVendors/*.csv".into()],
+                    never_share: Vec::new(),
+                    app_log: PathBuf::from("app.log"),
+                }),
+                Screen::Setup(_) => None,
+            },
         }
     }
 

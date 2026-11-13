@@ -2,6 +2,7 @@
 //! to logs and mods. The window talks to it through [`start`], sending [`state::Command`]s and
 //! drawing the [`state::Snapshot`]s it sends back.
 
+mod applog;
 pub mod demo;
 pub mod game;
 pub mod relay;
@@ -30,6 +31,11 @@ pub struct Options {
 pub fn start(options: Options) -> (async_channel::Sender<Command>, async_channel::Receiver<Snapshot>) {
     match options.demo {
         Some(screen) => demo::start(screen, options.app_version),
-        None => session::start(options.data_dir.unwrap_or_else(settings::default_data_dir), options.app_version, options.name),
+        None => {
+            let data_dir = options.data_dir.unwrap_or_else(settings::default_data_dir);
+            let app_log = applog::start(&data_dir);
+            log::info!("Cyberpunk Co-op Tools {} starting, data in {}", options.app_version, data_dir.display());
+            session::start(data_dir, app_log, options.app_version, options.name)
+        }
     }
 }

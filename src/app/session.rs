@@ -20,7 +20,7 @@ const STATUS_COL: Pixels = px(230.);
 const CHANGED_COL: Pixels = px(64.);
 
 impl AppView {
-    pub fn render_session(&mut self, s: &Session, version: &str, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+    pub fn render_session(&mut self, s: &Session, version: &str, update: Option<&str>, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
         let host_version = s.host().map(|h| h.game_version.clone());
         let note = match (s.role, s.me(), &host_version) {
             (Role::Tester, Some(me), Some(hv)) if &me.game_version != hv => Some(format!(
@@ -32,7 +32,7 @@ impl AppView {
 
         v_flex()
             .size_full()
-            .child(self.title_bar(s, cx))
+            .child(self.title_bar(s, update, cx))
             .when_some(s.problem.clone(), |v, problem| {
                 v.child(
                     h_flex()
@@ -77,7 +77,7 @@ impl AppView {
             .into_any_element()
     }
 
-    fn title_bar(&self, s: &Session, cx: &mut Context<Self>) -> AnyElement {
+    fn title_bar(&self, s: &Session, update: Option<&str>, cx: &mut Context<Self>) -> AnyElement {
         let state: (String, u32) = match (&s.link, s.role) {
             (Link::Reconnecting, _) => ("Reconnecting".into(), WARNING),
             (Link::Connecting, _) => ("Connecting".into(), MUTED),
@@ -100,6 +100,16 @@ impl AppView {
                 h_flex()
                     .pr(px(8.))
                     .gap(px(2.))
+                    .when_some(update.map(str::to_string), |b, next| {
+                        b.child(
+                            div().mr(px(6.)).child(
+                                accent_button("apply-update", "Restart to update")
+                                    .h(px(24.))
+                                    .tooltip(move |window, cx| Tooltip::new(format!("Installs version {next} and starts again")).build(window, cx))
+                                    .on_click(cx.listener(|view, _, _, _| view.send(Command::ApplyUpdate))),
+                            ),
+                        )
+                    })
                     .when(s.role == Role::Host, |b| {
                         b.child(
                             plain_button("copy-invite", "Copy invite", Some(IconName::Copy))
@@ -111,7 +121,11 @@ impl AppView {
                     .when(s.role == Role::Tester, |b| {
                         b.child(plain_button("leave", "Leave", None).on_click(cx.listener(|view, _, _, _| view.send(Command::Leave))))
                     })
-                    .child(icon_button("settings", IconName::SlidersHorizontal, MUTED).tooltip(|window, cx| Tooltip::new("Settings").build(window, cx))),
+                    .child(
+                        icon_button("settings", IconName::SlidersHorizontal, MUTED)
+                            .tooltip(|window, cx| Tooltip::new("Settings").build(window, cx))
+                            .on_click(cx.listener(|view, _, window, cx| view.open_settings(window, cx))),
+                    ),
             )
             .into_any_element()
     }

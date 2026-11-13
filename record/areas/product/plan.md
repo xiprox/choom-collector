@@ -54,6 +54,9 @@ The Settings window, Velopack's update check, the app's own log, and the AppImag
 
 Exit: a Windows install from one release updates itself to the next, and the AppImage joins a session on the user's Steam Deck.
 
+Built on 2026-11-13: the Settings page, the update check and its button, and the app's log ([interface log](../interface/log.md#2026-11-13-settings-and-the-update-button-went-straight-into-the-window-with-no-frames-first)).
+The exit's two tests wait for the next release and the Steam Deck.
+
 ## 8. A session with friends
 
 The user's group plays a session on Cyberpunk Co-op Tools instead of CP77 Log Collector.

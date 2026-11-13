@@ -7,6 +7,7 @@ use gpui_kit::component::v_flex;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use crate::settings::SettingsForm;
 use crate::theme::*;
 
 /// A question the window is asking about one shared mod.
@@ -26,6 +27,8 @@ pub struct AppView {
     pub invite: Entity<InputState>,
     pub relay: Entity<InputState>,
     setup_filled: bool,
+    pub settings_open: bool,
+    pub settings: SettingsForm,
     _snapshots: Task<()>,
 }
 
@@ -38,6 +41,7 @@ impl AppView {
     ) -> Self {
         let invite = cx.new(|cx| InputState::new(window, cx).placeholder("K7R-M2Q, or relay.example.net/K7R-M2Q"));
         let relay = cx.new(|cx| InputState::new(window, cx).placeholder("relay.example.net"));
+        let settings = SettingsForm::new(window, cx);
         let task = cx.spawn_in(window, async move |this, cx| {
             while let Ok(snapshot) = snapshots.recv().await {
                 let alive = this.update_in(cx, |this, window, cx| this.receive(snapshot, window, cx));
@@ -56,6 +60,8 @@ impl AppView {
             invite,
             relay,
             setup_filled: false,
+            settings_open: false,
+            settings,
             _snapshots: task,
         }
     }
@@ -72,6 +78,7 @@ impl AppView {
     fn receive(&mut self, snapshot: Snapshot, window: &mut Window, cx: &mut Context<Self>) {
         match &snapshot.screen {
             Screen::Setup(setup) => {
+                self.settings_open = false;
                 if !self.setup_filled {
                     self.setup_filled = true;
                     self.setup_role = Some(setup.role);
@@ -100,17 +107,20 @@ impl AppView {
 
 impl Render for AppView {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let screen = self.snapshot.as_ref().map(|s| (s.screen.clone(), s.app_version.clone()));
+        let snapshot = self.snapshot.clone();
         v_flex()
             .size_full()
             .bg(color(BASE))
             .text_color(color(TEXT))
             .text_size(TEXT_SIZE)
             .line_height(LINE_HEIGHT)
-            .map(|v| match screen {
+            .map(|v| match &snapshot {
                 None => v,
-                Some((Screen::Setup(setup), _)) => v.child(self.render_setup(&setup, window, cx)),
-                Some((Screen::Session(session), version)) => v.child(self.render_session(&session, &version, window, cx)),
+                Some(Snapshot { screen: Screen::Setup(setup), .. }) => v.child(self.render_setup(setup, window, cx)),
+                Some(s @ Snapshot { settings: Some(settings), .. }) if self.settings_open => v.child(self.render_settings(s, settings, cx)),
+                Some(Snapshot { screen: Screen::Session(session), app_version, update, .. }) => {
+                    v.child(self.render_session(session, app_version, update.as_deref(), window, cx))
+                }
             })
     }
 }
