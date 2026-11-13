@@ -575,7 +575,7 @@ impl Hosting {
                 entry.left = None;
                 self.by_tester.insert(from, id);
                 vec![
-                    (Some(from), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: id, extra_paths: extra_paths.to_vec() })),
+                    (Some(from), ToTester::Welcome(Welcome { host_name: host_name.into(), player_id: id, extra_paths: extra_paths.to_vec(), logs: Vec::new() })),
                     (None, ToTester::Players(self.list())),
                 ]
             }
@@ -588,6 +588,8 @@ impl Hosting {
                 entry.info.doing = doing;
                 vec![(None, ToTester::Players(self.list()))]
             }
+            // Stages 5 and 6 of record/areas/product/plan.md pass these to coop-logs and coop-mods.
+            ToHost::Logs(_) | ToHost::Mods(_) => Vec::new(),
         }
     }
 

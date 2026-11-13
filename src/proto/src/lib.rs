@@ -14,6 +14,10 @@ pub enum ToHost {
     Hello(Hello),
     /// What the tester's PC is doing now, for the host's list of players.
     Doing(Doing),
+    /// A message of `coop-logs`' own, which it encodes and reads itself.
+    Logs(Vec<u8>),
+    /// A message of `coop-mods`' own, which it encodes and reads itself.
+    Mods(Vec<u8>),
 }
 
 /// What the host sends a tester, or every tester.
@@ -22,6 +26,10 @@ pub enum ToTester {
     Welcome(Welcome),
     Refused { reason: String },
     Players(Vec<PlayerInfo>),
+    /// A message of `coop-logs`' own.
+    Logs(Vec<u8>),
+    /// A message of `coop-mods`' own.
+    Mods(Vec<u8>),
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -51,6 +59,9 @@ pub struct Welcome {
     pub player_id: u64,
     /// Patterns relative to the game folder that every tester's PC picks up besides its logs.
     pub extra_paths: Vec<String>,
+    /// What the host already has of this player's logs, in `coop-logs`' own encoding, so the
+    /// player resumes instead of sending it again.
+    pub logs: Vec<u8>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
