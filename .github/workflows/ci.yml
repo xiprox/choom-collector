@@ -1,8 +1,26 @@
 name: CI
 
+# Docs, the record, and experiments don't change what builds, so a push of only those skips CI.
 on:
   push:
+    paths-ignore:
+      - "record/**"
+      - "experiments/**"
+      - ".claude/**"
+      - "**/*.md"
+      - "LICENSE"
   pull_request:
+    paths-ignore:
+      - "record/**"
+      - "experiments/**"
+      - ".claude/**"
+      - "**/*.md"
+      - "LICENSE"
+
+# A newer push to the same branch or pull request makes an unfinished run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -24,5 +42,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libfontconfig-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-dev libx11-xcb-dev libxcb1-dev libwayland-dev
-      - run: cargo build --release --locked
-      - run: cargo test --locked
+      # One build in the dev profile compiles every crate and the app, and runs every crate's
+      # tests. The release profile's LTO build is release.yml's, which runs when a version ships.
+      - run: cargo test --workspace --locked
