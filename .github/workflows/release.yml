@@ -70,11 +70,18 @@ jobs:
       - name: Version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            base=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[0].version')
+            base=$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "cyberpunk-coop-tools") | .version')
             echo "VERSION=$base-dryrun.${{ github.run_number }}" >> "$GITHUB_ENV"
           else
             echo "VERSION=${{ needs.release-please.outputs.version }}" >> "$GITHUB_ENV"
           fi
+
+      # The same list as ci.yml's: what gpui links on Linux.
+      - name: Install gpui's Linux packages
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libfontconfig-dev libfreetype-dev libxkbcommon-dev libxkbcommon-x11-dev libx11-dev libx11-xcb-dev libxcb1-dev libwayland-dev
 
       - name: Build
         run: |

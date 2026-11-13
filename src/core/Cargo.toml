@@ -1,0 +1,11 @@
+[package]
+name = "coop-core"
+version = "0.0.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+coop-proto = { path = "../proto" }
+coop-logs = { path = "../logs" }
+coop-mods = { path = "../mods" }
+

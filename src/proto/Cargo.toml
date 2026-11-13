@@ -1,0 +1,8 @@
+[package]
+name = "coop-proto"
+version = "0.0.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+
