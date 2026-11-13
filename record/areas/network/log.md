@@ -13,6 +13,13 @@ We expected it to, since `wrangler dev` runs the same Worker and Durable Object 
 
 The address stays out of this repository, which is public, since it's the user's own relay on their free plan; players get it in the invite.
 
+The user then moved the relay to a subdomain of their own domain, with `wrangler deploy --domain`, so the domain stays out of `relay/wrangler.toml` too.
+Since the file doesn't set `workers_dev`, that deploy turned the `workers.dev` address off, and it answered 404 afterwards.
+Through Cloudflare's address for the new name, a plain request got 426, and a WebSocket request to `/join` got 101 Switching Protocols.
+This PC's router kept answering "no such name", from a lookup just before the deploy, for over an hour, past the zone's 1800s negative-cache time, while 1.1.1.1 and 8.8.8.8 already returned the name (unverified why: possibly a filter on new names in the router or the ISP's resolver).
+After the user pointed this PC at 1.1.1.1, `cargo test -p coop-core --test relay -- --ignored` passed 3 of 3 in 4.48s against the new name, and the user's installed 0.3.0 hosted through it, 144ms to the relay.
+So a player whose resolver holds a stale "no such name" needs another resolver, not a fix in the app.
+
 ## 2026-11-13: A host and two testers on one PC find each other, and a restarted tester rejoins in its own place
 
 We asked whether the session, as [relay and sessions](01-relay-and-sessions.md) describes it, works end to end through the relay: hosting and joining on start, `Hello` and `Welcome`, the players list, and a tester's restart.
