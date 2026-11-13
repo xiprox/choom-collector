@@ -976,7 +976,12 @@ dependencies = [
 name = "coop-logs"
 version = "0.0.0"
 dependencies = [
+ "chrono",
  "coop-proto",
+ "flate2",
+ "postcard",
+ "serde",
+ "tempfile",
 ]
 
 [[package]]
