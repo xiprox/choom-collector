@@ -1,5 +1,5 @@
 [package]
-name = "choomlink"
+name = "cp77-coop-tools"
 version = "0.1.0"
 edition = "2024"
 description = "Play Cyberpunk 2077 together: everyone's logs in one place, and mods shared between friends."

@@ -1,4 +1,4 @@
-# Choomlink
+# CP77 Co-op Tools
 
 Play Cyberpunk 2077 together: everyone's logs in one place, and mods shared between friends.
 A Rust rewrite of CP77 Log Collector, at its very start: the app itself is a placeholder for now.
@@ -13,7 +13,7 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fe
 2. Merging that PR creates the GitHub release and its tag.
 3. The same workflow then builds Windows and Linux, packs them with
    [Velopack](https://velopack.io), and attaches them to the release: a Windows installer
-   (`choomlink-win-x64-Setup.exe`), a portable zip, a Linux AppImage, and the packages the
+   (`cp77-coop-tools-win-x64-Setup.exe`), a portable zip, a Linux AppImage, and the packages the
    app updates itself from, deltas included.
 
 Windows and Linux use the `win-x64` and `linux-x64` channels, so their files never clash on

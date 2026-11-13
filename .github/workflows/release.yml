@@ -48,10 +48,10 @@ jobs:
           # on the shared release (a non-default channel is part of every file name).
           - os: windows-latest
             channel: win-x64
-            exe: choomlink.exe
+            exe: cp77-coop-tools.exe
           - os: ubuntu-22.04
             channel: linux-x64
-            exe: choomlink
+            exe: cp77-coop-tools
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -105,7 +105,7 @@ jobs:
 
       - name: Pack
         run: |
-          vpk pack -u choomlink --packTitle Choomlink -v "$VERSION" \
+          vpk pack -u cp77-coop-tools --packTitle "CP77 Co-op Tools" -v "$VERSION" \
             -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases
 
       - name: Attach to the release
