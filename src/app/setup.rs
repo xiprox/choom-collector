@@ -47,8 +47,8 @@ impl AppView {
             v_flex().gap(px(8.)).child(label(label_text)).child(control).child(helper)
         };
         let helper = |text: String| div().text_size(SMALL_SIZE).text_color(color(MUTED)).child(text).into_any_element();
-        let change_game = outline_button("change-game", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_folder(true, cx)));
-        let change_logs = outline_button("change-logs", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_folder(false, cx)));
+        let change_game = button("change-game", "Change", Kind::Secondary).on_click(cx.listener(|view, _, _, cx| view.pick_folder(true, cx)));
+        let change_logs = button("change-logs", "Change", Kind::Secondary).on_click(cx.listener(|view, _, _, cx| view.pick_folder(false, cx)));
         let path_row = |path: String, change: Stateful<Div>| {
             h_flex()
                 .gap(px(8.))
@@ -75,7 +75,7 @@ impl AppView {
                     h_flex()
                         .mt(px(8.))
                         .gap(px(16.))
-                        .child(accent_button("join", "Join").on_click(cx.listener(|view, _, _, cx| view.finish_setup(Role::Tester, cx))))
+                        .child(button("join", "Join", Kind::Primary).on_click(cx.listener(|view, _, _, cx| view.finish_setup(Role::Tester, cx))))
                         .child(helper(format!(
                             "From then on, the app joins {} by itself when it starts",
                             if code_in_invite.is_empty() { "the session".to_string() } else { code(&code_in_invite.replace('-', "")) }
@@ -100,7 +100,7 @@ impl AppView {
                     h_flex()
                         .gap(px(8.))
                         .child(mono(cx, code(&setup.host_code)).text_size(TEXT_SIZE).font_weight(FontWeight::MEDIUM).text_color(color(STRONG)))
-                        .child(outline_button("new-code", "New code").on_click(cx.listener(|view, _, _, _| view.send(Command::NewCode))))
+                        .child(button("new-code", "New code", Kind::Secondary).on_click(cx.listener(|view, _, _, _| view.send(Command::NewCode))))
                         .into_any_element(),
                     helper("It stays yours, so testers type it only once".into()),
                 ))
@@ -113,7 +113,7 @@ impl AppView {
                     h_flex()
                         .mt(px(8.))
                         .gap(px(16.))
-                        .child(accent_button("host", "Host").on_click(cx.listener(|view, _, _, cx| view.finish_setup(Role::Host, cx))))
+                        .child(button("host", "Host", Kind::Primary).on_click(cx.listener(|view, _, _, cx| view.finish_setup(Role::Host, cx))))
                         .child(helper(format!("From then on, the app hosts {} by itself when it starts", code(&setup.host_code)))),
                 ),
         };

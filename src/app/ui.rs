@@ -59,42 +59,66 @@ pub fn icon_button(id: impl Into<ElementId>, name: IconName, hex: u32) -> Statef
         .child(icon(name, hex))
 }
 
-/// A button with a border, for the second choice beside a filled one.
-pub fn outline_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
-    h_flex()
+/// The red stop square that ends the session, as an IDE's stop button ends a run.
+pub fn stop_button(id: impl Into<ElementId>) -> Stateful<Div> {
+    div()
         .id(id.into())
         // Blocks the hit to what's behind, so in the title bar a real click reaches the button
         // instead of Windows taking it as a grab of the bar to move the window.
         .occlude()
-        .h(px(24.))
-        .px(px(12.))
+        .flex()
+        .items_center()
+        .justify_center()
+        .size(px(20.))
         .rounded(RADIUS)
-        .border_1()
-        .border_color(color(CONTROL))
-        .text_color(color(TEXT))
         .cursor_pointer()
         .hover(|s| s.bg(color(RAISED)))
         .active(|s| s.bg(color(CONTROL)))
-        .child(text.into())
+        // The square is 11px, the code's height, drawn in a 16px box centered in the 20px button.
+        .child(svg().path("brand/stop.svg").size(px(16.)).text_color(color(TROUBLE)))
 }
 
-/// The one filled button a screen may have.
-pub fn accent_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
+/// What a button is for, which only its colors show: every button has the same shape.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum Kind {
+    /// What's yours or waits on you, such as Follow, Save, or Join: the accent's yellow.
+    Primary,
+    /// Any other choice, such as Cancel, Keep my copy, or Change: dark gray.
+    Secondary,
+    /// A choice that removes something, such as Delete it: dark gray with the trouble color's text.
+    Danger,
+}
+
+/// The one button shape (the user, 2026-11-13): 24px tall, 12px at the sides, medium weight, 4px
+/// corners, and no border, so buttons side by side match whatever their kind.
+pub fn button(id: impl Into<ElementId>, text: impl Into<SharedString>, kind: Kind) -> Stateful<Div> {
+    let (bg, hover, fg) = match kind {
+        Kind::Primary => (ACCENT, 0xe8d56a, ON_ACCENT),
+        Kind::Secondary => (CONTROL, 0x3c3c43, STRONG),
+        Kind::Danger => (CONTROL, 0x3c3c43, TROUBLE),
+    };
     h_flex()
         .id(id.into())
         // Blocks the hit to what's behind, so in the title bar a real click reaches the button
         // instead of Windows taking it as a grab of the bar to move the window.
         .occlude()
-        .h(px(28.))
-        .px(px(20.))
+        .flex_shrink_0()
+        .h(px(24.))
+        .px(px(12.))
         .rounded(RADIUS)
-        .bg(color(ACCENT))
-        .text_color(color(ON_ACCENT))
-        .font_weight(FontWeight::SEMIBOLD)
+        .bg(color(bg))
+        .text_color(color(fg))
+        .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
-        .hover(|s| s.opacity(0.9))
-        .active(|s| s.opacity(0.8))
+        .hover(move |s| s.bg(color(hover)))
+        .active(|s| s.opacity(0.85))
         .child(text.into())
+}
+
+/// The primary button made small for a title bar, for one thing waiting on the player, such as an
+/// update: 20px tall, so it keeps 6px clear of the bar's edges.
+pub fn accent_pill(id: impl Into<ElementId>, text: impl Into<SharedString>) -> Stateful<Div> {
+    button(id, text, Kind::Primary).h(px(20.)).px(px(8.)).text_size(SMALL_SIZE)
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -144,6 +168,33 @@ pub fn tile(cx: &App, name: &str, background: u32, foreground: u32) -> Div {
         .text_size(SMALL_SIZE)
         .font_weight(FontWeight::SEMIBOLD)
         .child(name.chars().next().map(|c| c.to_uppercase().to_string()).unwrap_or_default())
+}
+
+/// A tile for files on their way: it fills from the left as they arrive, cyan for what's here and
+/// half-strength cyan for what's still to come, with the initial in dark over both.
+pub fn progress_tile(cx: &App, name: &str, done: u32, total: u32) -> Div {
+    let share = if total == 0 { 0.0 } else { (done as f32 / total as f32).clamp(0.0, 1.0) };
+    div()
+        .relative()
+        .overflow_hidden()
+        .w(px(20.))
+        .h(px(16.))
+        .rounded(px(2.))
+        .bg(color(PROGRESS_DIM))
+        .child(div().absolute().top_0().left_0().h_full().w(px(20. * share)).bg(color(PROGRESS)))
+        .child(
+            div()
+                .absolute()
+                .size_full()
+                .flex()
+                .items_center()
+                .justify_center()
+                .text_color(color(ON_ACCENT))
+                .font_family(cx.theme().mono_font_family.clone())
+                .text_size(SMALL_SIZE)
+                .font_weight(FontWeight::SEMIBOLD)
+                .child(name.chars().next().map(|c| c.to_uppercase().to_string()).unwrap_or_default()),
+        )
 }
 
 /// The mark: two slanted bars, two players side by side.

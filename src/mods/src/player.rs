@@ -11,7 +11,6 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use sha2::{Digest, Sha256};
 
-use crate::backups::Backups;
 use crate::hashes::{EMPTY, Hash, Hashes, Stamp};
 use crate::hub::WINDOW;
 use crate::layout::{
@@ -50,8 +49,6 @@ struct Part {
     tmp: PathBuf,
     sha: Sha256,
     done: bool,
-    /// What it replaces is in the backups.
-    backed_up: bool,
 }
 
 /// A followed folder's delivery here.
@@ -105,7 +102,6 @@ pub struct Player {
     excluders: HashMap<Vec<String>, Excluder>,
     shares: BTreeSet<String>,
     follows: Vec<SavedFollow>,
-    backups: Backups,
     hashes: Hashes,
     connected: bool,
 
@@ -150,9 +146,8 @@ pub struct Player {
     /// Followed folders that changed while the game ran, by path in lower case.
     stale_in_game: HashSet<String>,
     game_up: bool,
-    kept_for_delete: HashSet<PathBuf>,
     /// Folders an unfollow couldn't delete all of, by the key it was given, to try again.
-    pending_delete: HashMap<String, (Vec<String>, HashSet<PathBuf>)>,
+    pending_delete: HashMap<String, Vec<String>>,
 
     share_due: Instant,
     sync_due: Instant,
@@ -182,7 +177,6 @@ impl Player {
             excluders: HashMap::new(),
             shares: saved.shared.into_iter().map(|s| s.to_lowercase()).collect(),
             follows: saved.follows,
-            backups: Backups::new(&config.data_dir),
             hashes: Hashes::default(),
             connected: false,
             list: Vec::new(),
@@ -212,7 +206,6 @@ impl Player {
             deliveries_sent: None,
             stale_in_game: HashSet::new(),
             game_up: false,
-            kept_for_delete: HashSet::new(),
             pending_delete: HashMap::new(),
             share_due: now,
             sync_due: now,
@@ -401,7 +394,7 @@ impl Player {
     }
 
     /// Stops following the row's folders. With `delete_copy`, each followed folder on this PC
-    /// goes too, after its files go to the backups. When some files can't be deleted, such as
+    /// goes too. When some files can't be deleted, such as
     /// those a running game holds on Windows, the error says how many, and calling this again
     /// tries again.
     pub fn unfollow(&mut self, key: &str, delete_copy: bool) -> Result<(), String> {
@@ -420,8 +413,8 @@ impl Player {
             self.pending_delete.remove(&key);
             return Ok(());
         }
-        let (mut folders, mut kept) = if !followed.is_empty() {
-            (followed, HashSet::new())
+        let mut folders = if !followed.is_empty() {
+            followed
         } else {
             match self.pending_delete.remove(&key) {
                 Some(pending) => pending,
@@ -433,14 +426,13 @@ impl Player {
             return Ok(());
         }
         folders.retain(|p| !self.shares.contains(&name_of(p).to_lowercase()));
-        let left: usize = folders.iter().map(|p| delete_folder(&game, p, &mut self.backups, &mut kept)).sum();
-        self.backups.trim();
+        let left: usize = folders.iter().map(|p| delete_folder(&game, p)).sum();
         self.my_mods_due = (self.clock)();
         if left == 0 {
             log::info!("Mods: deleted {} from the game folder", folders.join(", "));
             return Ok(());
         }
-        self.pending_delete.insert(key, (folders, kept));
+        self.pending_delete.insert(key, folders);
         let (count, them) = if left == 1 { ("1 file".to_string(), "it") } else { (format!("{left} files"), "them") };
         log::info!("Mods: couldn't delete {count} of {name}");
         Err(format!("{count} of {name} couldn't be deleted, most likely because the game has {them} open. Close the game and try again."))
@@ -641,7 +633,6 @@ impl Player {
         }
         self.wanted = wanted;
         self.wants = wants;
-        self.backups.trim();
         waiting
     }
 
@@ -664,12 +655,8 @@ impl Player {
                 if theirs.contains(&f.path.to_lowercase()) {
                     continue;
                 }
-                if self.kept_for_delete.insert(f.full.clone()) {
-                    self.backups.keep(&f.full, &f.path);
-                }
                 match fs::remove_file(&f.full) {
                     Ok(()) => {
-                        self.kept_for_delete.remove(&f.full);
                         changed += 1;
                         deleted = true;
                     }
@@ -694,7 +681,7 @@ impl Player {
                 }
             }
             if f.size == 0 && f.hash == EMPTY {
-                match place_empty(&target, &f.path, &mut self.backups) {
+                match place_empty(&target) {
                     Ok(()) => changed += 1,
                     Err(_) => held.push(f.path.clone()),
                 }
@@ -702,7 +689,7 @@ impl Player {
             }
             wanted.insert(f.path.clone(), (f.hash, f.size));
             if let Some(part) = self.parts.get_mut(&f.path).filter(|p| p.hash == f.hash && p.done) {
-                match install(part, &target, &f.path, &mut self.backups, &mut self.hashes) {
+                match install(part, &target, &mut self.hashes) {
                     Ok(()) => {
                         self.parts.remove(&f.path);
                         wanted.remove(&f.path);
@@ -794,7 +781,7 @@ impl Player {
                 log::warn!("Mods: couldn't write {}: {e}", b.path);
                 return;
             }
-            self.parts.insert(b.path.clone(), Part { hash, size, have: 0, tmp, sha: Sha256::new(), done: false, backed_up: false });
+            self.parts.insert(b.path.clone(), Part { hash, size, have: 0, tmp, sha: Sha256::new(), done: false });
         }
         let part = self.parts.get_mut(&b.path).expect("the part was just made");
         if part.done {
@@ -1031,13 +1018,9 @@ impl Drop for Player {
 /// Puts a finished file in place by a rename, so the game never reads half a file. On Windows
 /// the rename fails while the running game holds the old file, and the finished file waits beside
 /// it for the next try; on Linux the game keeps reading the old file until it closes it.
-fn install(part: &mut Part, target: &Path, rel: &str, backups: &mut Backups, hashes: &mut Hashes) -> std::io::Result<()> {
+fn install(part: &mut Part, target: &Path, hashes: &mut Hashes) -> std::io::Result<()> {
     if let Some(parent) = target.parent() {
         fs::create_dir_all(parent)?;
-    }
-    if !part.backed_up {
-        backups.keep(target, rel);
-        part.backed_up = true;
     }
     fs::rename(&part.tmp, target)?;
     if let Some(stamp) = Stamp::of(target) {
@@ -1046,11 +1029,10 @@ fn install(part: &mut Part, target: &Path, rel: &str, backups: &mut Backups, has
     Ok(())
 }
 
-fn place_empty(target: &Path, rel: &str, backups: &mut Backups) -> std::io::Result<()> {
+fn place_empty(target: &Path) -> std::io::Result<()> {
     if let Some(parent) = target.parent() {
         fs::create_dir_all(parent)?;
     }
-    backups.keep(target, rel);
     let tmp = tmp_path(target);
     File::create(&tmp)?;
     fs::rename(&tmp, target)

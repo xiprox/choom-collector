@@ -95,26 +95,12 @@ fn a_followers_copy_becomes_the_same_as_the_sharers() {
     assert_eq!(net.read(MIRA, "r6/scripts/Tweaks/bossun.log"), None);
     assert_eq!(net.p(MIRA).doing(), Doing::Nothing);
 
-    // What following replaced or deleted is in her backups.
-    let backups = net.pcs[MIRA].data.join("mod-backups");
-    let kept: BTreeMap<String, Vec<u8>> = std::fs::read_dir(&backups).unwrap().flatten().flat_map(|d| common_files(&d.path().join("r6/scripts/Tweaks"))).collect();
-    assert_eq!(kept.get("a.reds").map(Vec::as_slice), Some(&b"old"[..]));
-    assert_eq!(kept.get("extra.reds").map(Vec::as_slice), Some(&b"mine"[..]));
+    // Nothing is kept aside: the follower's copy is simply the sharer's (the user, 2026-11-13).
+    assert!(!net.pcs[MIRA].data.join("mod-backups").exists());
 
     assert!(net.run_until(3.0, |n| n.row(BOSSUN, "tweaks").unwrap().followers == [Follower { name: "mira".into(), delivery: Delivery::UpToDate }]));
 }
 
-fn common_files(dir: &std::path::Path) -> BTreeMap<String, Vec<u8>> {
-    let mut out = BTreeMap::new();
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for e in entries.flatten() {
-            if e.path().is_file() {
-                out.insert(e.file_name().to_string_lossy().into_owned(), std::fs::read(e.path()).unwrap());
-            }
-        }
-    }
-    out
-}
 
 #[test]
 fn a_changed_a_new_and_a_deleted_file_reach_the_follower() {
@@ -240,17 +226,13 @@ fn a_slow_follower_shows_fetching_n_of_m_files() {
 }
 
 #[test]
-fn unfollowing_with_delete_backs_the_copy_up_first() {
+fn unfollowing_with_delete_removes_the_copy() {
     let mut net = shared_and_followed();
     net.write(MIRA, "r6/scripts/Tweaks/db.sqlite3", b"what the mod saved");
     assert_eq!(net.pm(MIRA).unfollow("tweaks", true), Ok(()));
     assert!(!net.path(MIRA, "r6/scripts/Tweaks").exists());
     assert!(!net.path(MIRA, "r6/tweaks/Tweaks").exists());
-    let backups = net.pcs[MIRA].data.join("mod-backups");
-    let stamp = std::fs::read_dir(&backups).unwrap().flatten().map(|d| d.path()).max().unwrap();
-    assert_eq!(std::fs::read(stamp.join("r6/scripts/Tweaks/db.sqlite3")).unwrap(), b"what the mod saved");
-    assert_eq!(std::fs::read(stamp.join("r6/scripts/Tweaks/a.reds")).unwrap(), bytes(1, 700_000));
-    assert_eq!(std::fs::read(stamp.join("r6/tweaks/Tweaks/c.yaml")).unwrap(), b"c: 1");
+    assert!(!net.pcs[MIRA].data.join("mod-backups").exists());
     assert!(net.run_until(6.0, |n| n.row(MIRA, "tweaks").unwrap().status == ModStatus::NotOnYourPc));
     assert_eq!(net.row(MIRA, "tweaks").unwrap().follow, Follow::No);
     assert!(net.run_until(3.0, |n| n.row(BOSSUN, "tweaks").unwrap().followers.is_empty()));

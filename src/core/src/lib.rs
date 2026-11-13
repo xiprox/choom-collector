@@ -18,7 +18,7 @@ use state::{Command, Snapshot};
 pub struct Options {
     /// The program's version, which the window shows; the core's own crate has none of its own.
     pub app_version: String,
-    /// Where settings, the app's log, backups, and the host's cache live; `None` for the usual place.
+    /// Where settings, the app's log, and the host's cache live; `None` for the usual place.
     pub data_dir: Option<PathBuf>,
     /// A made-up session instead of a real one.
     pub demo: Option<DemoScreen>,

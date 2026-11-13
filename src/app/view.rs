@@ -21,8 +21,6 @@ pub struct AppView {
     commands: async_channel::Sender<Command>,
     pub snapshot: Option<Snapshot>,
     pub selected: Option<PlayerId>,
-    /// The player clicked a row, so the selection stays where they put it.
-    pub picked: bool,
     pub my_mods_open: bool,
     pub asking: Option<Asking>,
     pub setup_role: Option<Role>,
@@ -58,7 +56,6 @@ impl AppView {
             commands,
             snapshot: None,
             selected: None,
-            picked: false,
             my_mods_open: false,
             asking: None,
             setup_role: None,
@@ -109,17 +106,9 @@ impl AppView {
             }
             Screen::Session(session) => {
                 self.setup_filled = false;
-                let still_there = self.selected.is_some_and(|id| session.players.iter().any(|p| p.id == id));
-                // A host alone in the session sees their own details until the first tester joins,
-                // unless they picked their own row themselves.
-                let host_waiting = session.role == Role::Host && !self.picked && session.me().map(|p| p.id) == self.selected;
-                if !still_there || host_waiting {
-                    // The host starts on the first tester, whose logs it receives; a tester on
-                    // themselves, whose logs are the only ones they see.
-                    self.selected = match session.role {
-                        Role::Host => session.players.iter().find(|p| !p.is_me).or(session.me()).map(|p| p.id),
-                        Role::Tester => session.me().map(|p| p.id),
-                    };
+                // A player's details show only once their row is clicked, and close when they leave.
+                if !self.selected.is_some_and(|id| session.players.iter().any(|p| p.id == id)) {
+                    self.selected = None;
                 }
             }
         }

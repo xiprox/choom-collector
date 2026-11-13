@@ -4,7 +4,7 @@
 Purpose:     How coop-mods finds a player's mods, shares them, and keeps each follower's copy the same as the sharer's.
 Depends on:  product/02-v1-scope.md, architecture/01-spine.md, network/01-relay-and-sessions.md
 Decides:     How mods are found and grouped, the messages and who sends each, how a follow is applied, held files
-             and game restarts, unfollowing, backups, the hub's cache, delivery state, flow control, and what
+             and game restarts, unfollowing, the hub's cache, delivery state, flow control, and what
              survives a restart.
 ```
 
@@ -121,10 +121,10 @@ A follow is a folder path, the PC ID of the sharer the player agreed to, and tha
 
 Every second, and at once after a new list or a finished file, the follower brings each followed folder in line with the sharer's list (read in CP77 Log Collector, src/Mods.cs, `ModClient.Mirror`):
 
-1. Each local file the sharer's list lacks, apart from what the patterns leave out, goes to the backups and is deleted.
+1. Each local file the sharer's list lacks, apart from what the patterns leave out, is deleted.
 2. Each of the sharer's files whose local copy differs in size or SHA-256 goes into the next `Want`.
 3. **Changed:** its `Data` goes into `<file>.coop-tmp` beside the file it replaces, and the follower hashes the bytes as they arrive.
-4. Once the file is complete and its hash matches the list, the old file goes to the backups, and a rename puts the new one in its place, so the game never reads half a file.
+4. Once the file is complete and its hash matches the list, a rename puts it in place of the old one, so the game never reads half a file.
 
 Step 1 removes a file added in a followed folder, and steps 2 to 4 fetch a changed one again, so an edit there is undone within 3s (measured on Windows 11, 2026-11-13, [log](log.md#2026-11-13-players-and-a-hub-in-one-process-keep-a-followers-copy-exact-and-a-held-file-lands-once-its-let-go)).
 CP77 Log Collector writes a file on its way to a folder in its data folder and copies it beside the target once complete (read in CP77 Log Collector, src/Mods.cs, `ModClient.OnData` and `ModClient.Install`), but copying a large archive from another drive would hold up a tick, and a rename within one folder takes no time.
@@ -159,21 +159,17 @@ The mark clears when the follower sees the game isn't running.
 ## Unfollowing
 
 `unfollow(key, delete_copy)` stops following the row's folders, and drops their files on their way.
-With `delete_copy`, it deletes each followed folder that's on the PC, after putting each file in the backups once, however many tries the deletion takes (read in CP77 Log Collector, src/Mods.cs, `ModLayout.DeleteFolder`).
+With `delete_copy`, it deletes each followed folder that's on the PC (read in CP77 Log Collector, src/Mods.cs, `ModLayout.DeleteFolder`).
 
 - A folder that's a link or junction to one elsewhere loses only the link, so a modder's working copy is never touched (read in CP77 Log Collector, src/Mods.cs, `ModLayout.DeleteTree`).
 - When files are left, such as those a running game holds on Windows, it returns an error naming how many, and calling it again tries again.
 - **Changed:** it deletes only the folders the player followed.
   CP77 Log Collector deletes every folder of the row that's on the PC (read in CP77 Log Collector, src/MainWindow.cs, `AskToDeleteCopy`), so a folder the sharer added and the player never agreed to, which may be the player's own, would go too.
 
-## Backups
+## No backups
 
-What following replaces or deletes, and what unfollowing deletes, goes to `mod-backups/<YYYY-MM-DD_HH-MM-SS>/<game-relative path>` in the data folder (read in CP77 Log Collector, src/Mods.cs, `ModBackups`).
-
-- After each pass that kept something, the backups are walked newest first, and every folder from the one that takes the total over 2 GiB onward is deleted, so the oldest go first.
-- A file over 512 MiB isn't kept.
-- **Changed:** a backup is a hard link where the data folder and the game folder share a drive, and a copy otherwise.
-  The file is replaced by a rename or deleted right after, so the link keeps the old bytes, without copying a large archive.
+- **Dropped:** CP77 Log Collector's backups of what following replaces or deletes, and what unfollowing deletes (read in CP77 Log Collector, src/Mods.cs, `ModBackups`).
+  The user dropped them in the polish pass (2026-11-13): a follower's copy is the sharer's, which the sharer still has, and a follower isn't meant to edit it.
 
 ## The hub's cache
 
@@ -210,7 +206,6 @@ Hashing reads at most 32 MiB a tick, picking up a large file where the last tick
 
 ## Known limits
 
-- A backup by copy, from a game folder on another drive, copies up to 512 MiB in one tick.
 - `unfollow` with `delete_copy` deletes and backs up the whole mod before it returns.
 - **Dropped:** following a folder by name whoever shares it, which CP77 Log Collector offers through `--subscribe` (read in CP77 Log Collector, src/Mods.cs, `ModFollow`), since Cyberpunk Co-op Tools has no such option.
 - A game that closes and starts again within the 2s between checks keeps a stale restart mark until it closes.

@@ -65,7 +65,8 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   | Accent: what's yours or happening now | `#ddc94f`, with `#08080a` on it |
   | Done | `#8c8c95` |
   | Warning: something's off | `#e89b5e` |
-  | Trouble: something broke | `#e5736e` |
+  | In progress: files on their way | `#74d4ff`, Dual Input's primary, and `#3f7489` for what's still to come |
+  | Trouble: something broke | `#ea7977`, as Dual Input's |
 
   | Thing | Value |
   | --- | --- |
@@ -73,11 +74,12 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   | Codes, sizes, and paths | IBM Plex Mono, 12px or 13px |
   | The setup screen's name | IBM Plex Sans, 16px, semibold |
   | Title bar, section headers, status bar | 32px, 28px, 24px tall |
-  | Rows | 28px tall |
+  | Rows, section headers, column headings, and the status bar | 32px tall, with content 8px in on every side |
   | Spacing and sizes | multiples of 4px |
   | Buttons and inputs | 24px or 28px tall |
   | Corners | 4px; the window's from the system |
-  | Icons | Lucide, as gpui-kit ships it, 16px |
+  | Icons | Lucide, as gpui-kit ships it, drawn with a 1.75 stroke at 14px |
+  | Buttons | 24px tall, 12px at the sides, medium weight, no border: primary in the accent, secondary in control gray, danger in control gray with trouble's text |
 
   - The accent marks what's the player's own or happening now: the mark, the selection on the focused row, checked checkboxes, fetching, and the one filled button on a screen.
   - Nothing is green: what's fine stays gray.
@@ -93,7 +95,7 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
 
 - **Decided:**
   - Ticking Follow on a mod opens a box under its row, "Follow EquipmentEx from bossun?", with "It has a DLL, which runs inside your game. Follow only people you trust." for a mod with a DLL, and "Mods run inside your game. Follow only people you trust." for one without, then Follow and Cancel.
-  - Unticking it asks "Stop following EquipmentEx?", "Your copy can stay as it is, or go, after a copy goes to the backups.", with Keep my copy and Delete it, the second in trouble's color.
+  - Unticking it asks "Stop following EquipmentEx?", "Delete your copy as well?", with Keep my copy, Delete it in trouble's color, and Cancel, which leaves the mod followed (the user, 2026-11-13).
   - A loose file named after a mod marks the mod's row with a warning, and its tooltip says where to move the file.
 - **Because:** mods run code inside the game, and CP77 Log Collector asks the same questions (read in CP77 Log Collector, README.md, "Sharing mods").
 
@@ -120,3 +122,14 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
 ## Not drawn yet
 
 - The window before anyone has shared a mod, and a session with one player.
+
+## The polish pass settled the header, the sidebar, and "Your mods"
+
+- **Decided:**
+  - The title bar's left reads the mark, the code, and a red stop square, 6px apart glyph to glyph; clicking the host's code copies it, and it reads "Copied" for a moment.
+    A word follows only when the session isn't running as it should: Connecting, Reconnecting, or "Waiting for xip's session".
+  - Each player's row starts with their tile, colored by state, and keeps its full sentence on the right; a tile fills from the left while their mods are on their way.
+  - A player's details open under their row when it's clicked, on the row's raised background, and close on a second click; none is open by default.
+  - "Your mods" is a drawer pinned to the bottom of the mods panel, opening upward to half its height, with up and down chevrons.
+  - A question's answers are buttons on the left and Cancel is plain on the right; unfollowing asks "Delete your copy as well?".
+- **Because:** the user found the header unbalanced, the sidebar a wall of text, the list jumping when a mod moved into the shared list, and the yellow fetching state clashing with the accent (the polish pass, 2026-11-13).

@@ -1,4 +1,4 @@
-//! What the hub and a follower refuse from another PC, and the backups' limits.
+//! What the hub and a follower refuse from another PC.
 
 mod common;
 
@@ -7,7 +7,7 @@ use std::path::Path;
 
 use common::Net;
 use coop_mods::wire::{self, Block, FileEntry, FromHub, Listed, Share, SharedFolder, ToHub};
-use coop_mods::{Backups, Follow, Hash, Target};
+use coop_mods::{Follow, Hash, Target};
 use sha2::{Digest, Sha256};
 
 const BOSSUN: usize = 1;
@@ -127,29 +127,4 @@ fn a_follower_checks_every_path_again_before_writing() {
     let _ = net.pm(BOSSUN).tick();
     assert!(find(&net.root, "evil.dll").is_empty(), "something was written outside the mod folder");
     assert_eq!(net.read(BOSSUN, "r6/scripts/Good/fine.reds").unwrap(), b"fine");
-}
-
-#[test]
-fn backups_drop_the_oldest_past_the_cap_and_skip_files_too_large() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = dir.path().join("mod-backups");
-    for (stamp, size) in [("2000-01-01_00-00-00", 60), ("2000-01-02_00-00-00", 60)] {
-        fs::create_dir_all(root.join(stamp).join("r6/scripts/Old")).unwrap();
-        fs::write(root.join(stamp).join("r6/scripts/Old/x.reds"), vec![0u8; size]).unwrap();
-    }
-    let small = dir.path().join("small.reds");
-    fs::write(&small, vec![1u8; 50]).unwrap();
-    let mut backups = Backups::with_limits(root.clone(), 120, 100);
-    assert!(backups.keep(&small, "r6/scripts/New/small.reds"));
-    backups.trim();
-    let mut left: Vec<String> = fs::read_dir(&root).unwrap().flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect();
-    left.sort();
-    assert_eq!(left.len(), 2, "{left:?}");
-    assert_eq!(left[0], "2000-01-02_00-00-00", "the oldest went first");
-    assert_eq!(fs::read(root.join(&left[1]).join("r6/scripts/New/small.reds")).unwrap(), vec![1u8; 50]);
-
-    let big = dir.path().join("big.archive");
-    fs::write(&big, vec![2u8; 200]).unwrap();
-    assert!(backups.keep(&big, "archive/pc/mod/New/big.archive"), "a file too large counts as kept");
-    assert!(find(&root, "big.archive").is_empty());
 }

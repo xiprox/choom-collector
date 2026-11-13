@@ -23,6 +23,9 @@ pub fn load_fonts(cx: &App) {
     }
 }
 
+/// The stop square everyone knows from IDEs, a solid rounded square that ends the session.
+const STOP: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.5" fill="#000"/></svg>"##;
+
 pub struct Assets;
 
 impl AssetSource for Assets {
@@ -30,7 +33,19 @@ impl AssetSource for Assets {
         if path == "brand/mark.svg" {
             return Ok(Some(Cow::Borrowed(MARK)));
         }
-        gpui_kit::assets::AllAssets.load(path)
+        if path == "brand/stop.svg" {
+            return Ok(Some(Cow::Borrowed(STOP)));
+        }
+        let found = gpui_kit::assets::AllAssets.load(path)?;
+        // Lucide draws with a 2-unit stroke on a 24-unit grid, which at 14px reads as a heavy web
+        // icon; 1.75 draws about 1px, in line with the text's own weight (the user, 2026-11-13).
+        if path.starts_with("icons/")
+            && let Some(svg) = &found
+        {
+            let thin = String::from_utf8_lossy(svg).replace("stroke-width=\"2\"", "stroke-width=\"1.75\"");
+            return Ok(Some(Cow::Owned(thin.into_bytes())));
+        }
+        Ok(found)
     }
 
     fn list(&self, path: &str) -> Result<Vec<SharedString>> {

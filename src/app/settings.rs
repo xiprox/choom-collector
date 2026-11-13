@@ -105,7 +105,7 @@ impl AppView {
             .gap(px(8.))
             .child(div().w(px(120.)).child(Input::new(&form.code)))
             .when(host, |r| {
-                r.child(outline_button("new-code", "New code").on_click(cx.listener(|view, _, window, cx| {
+                r.child(button("new-code", "New code", Kind::Secondary).on_click(cx.listener(|view, _, window, cx| {
                     let fresh = code(&coop_core::relay::new_code());
                     view.settings.code.update(cx, |s, cx| s.set_value(fresh, window, cx));
                 })))
@@ -115,14 +115,14 @@ impl AppView {
         let logs_row = h_flex()
             .gap(px(8.))
             .child(mono(cx, form.logs_folder.display().to_string()).flex_1().min_w_0().truncate())
-            .child(outline_button("change-logs", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_settings_logs_folder(cx))))
+            .child(button("change-logs", "Change", Kind::Secondary).on_click(cx.listener(|view, _, _, cx| view.pick_settings_logs_folder(cx))))
             .into_any_element();
 
         let app_log = view.app_log.clone();
         let app_row = h_flex()
             .gap(px(8.))
             .child(mono(cx, view.app_log.display().to_string()).flex_1().min_w_0().truncate())
-            .child(outline_button("show-log", "Show").on_click(move |_, _, cx| cx.reveal_path(&app_log)))
+            .child(button("show-log", "Show", Kind::Secondary).on_click(move |_, _, cx| cx.reveal_path(&app_log)))
             .into_any_element();
 
         let version_row = h_flex()
@@ -131,7 +131,7 @@ impl AppView {
             .map(|r| match &snapshot.update {
                 Some(next) => r
                     .child(div().text_color(color(MUTED)).child(format!("Version {next} is downloaded")))
-                    .child(accent_button("apply-update", "Restart to update").on_click(cx.listener(|view, _, _, _| view.send(Command::ApplyUpdate)))),
+                    .child(button("apply-update", "Restart to update", Kind::Primary).on_click(cx.listener(|view, _, _, _| view.send(Command::ApplyUpdate)))),
                 None => r,
             })
             .into_any_element();
@@ -174,11 +174,11 @@ impl AppView {
                 h_flex()
                     .pr(px(8.))
                     .gap(px(8.))
-                    .child(plain_button("cancel-settings", "Cancel", None).on_click(cx.listener(|view, _, _, cx| {
+                    .child(button("cancel-settings", "Cancel", Kind::Secondary).on_click(cx.listener(|view, _, _, cx| {
                         view.settings_open = false;
                         cx.notify();
                     })))
-                    .child(accent_button("save-settings", "Save").h(px(24.)).on_click(cx.listener(|view, _, _, cx| view.save_settings(cx)))),
+                    .child(button("save-settings", "Save", Kind::Primary).on_click(cx.listener(|view, _, _, cx| view.save_settings(cx)))),
             );
 
         v_flex()

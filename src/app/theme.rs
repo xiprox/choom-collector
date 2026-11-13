@@ -22,11 +22,17 @@ pub const PLACEHOLDER: u32 = 0x58585f;
 /// What's the player's own, or happening now.
 pub const ACCENT: u32 = 0xddc94f;
 pub const ON_ACCENT: u32 = 0x08080a;
+/// Something in progress, such as files on their way: Dual Input's primary cyan, so it can't be
+/// mistaken for the accent's yellow (the user, 2026-11-13).
+pub const PROGRESS: u32 = 0x74d4ff;
+/// The part of a filling tile still to come: the cyan at about half strength, which dark text
+/// still reads on.
+pub const PROGRESS_DIM: u32 = 0x3f7489;
 pub const DONE: u32 = 0x8c8c95;
 /// Something's off.
 pub const WARNING: u32 = 0xe89b5e;
 /// Something broke.
-pub const TROUBLE: u32 = 0xe5736e;
+pub const TROUBLE: u32 = 0xea7977;
 
 pub const FONT: &str = "IBM Plex Sans";
 pub const MONO_FONT: &str = "IBM Plex Mono";
@@ -36,14 +42,19 @@ pub const TITLE_SIZE: Pixels = px(16.);
 pub const LINE_HEIGHT: Pixels = px(16.);
 
 pub const TITLE_BAR: Pixels = px(32.);
-pub const SECTION: Pixels = px(28.);
-pub const STATUS_BAR: Pixels = px(24.);
+pub const SECTION: Pixels = px(32.);
+pub const STATUS_BAR: Pixels = px(32.);
 // Sizes and spacing are multiples of 4px; text sizes aren't on the grid, their line heights are.
-pub const ROW: Pixels = px(28.);
-pub const HEADER_ROW: Pixels = px(24.);
+/// The space around a row's or bar's content, the same on every side: 16px of content (a line of
+/// text, a checkbox, an icon) with 8px around it makes every row and bar 32px (the user,
+/// 2026-11-13).
+pub const INSET: Pixels = px(8.);
+pub const ROW: Pixels = px(32.);
+pub const HEADER_ROW: Pixels = px(32.);
 pub const PLAYERS_WIDTH: Pixels = px(280.);
 pub const RADIUS: Pixels = px(4.);
-pub const ICON: Pixels = px(16.);
+/// Icons are a glyph size, like text sizes, so they sit off the grid in a 16px slot or a button.
+pub const ICON: Pixels = px(14.);
 
 pub fn color(hex: u32) -> Hsla {
     rgb(hex).into()

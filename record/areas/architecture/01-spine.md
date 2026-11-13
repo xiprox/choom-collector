@@ -17,7 +17,7 @@ The logic runs on a tokio runtime of its own, and the window gets a fresh snapsh
 | `cyberpunk-coop-tools` | `src/app` | The window, the theme, the command line, and the program's entry point | `coop-core` |
 | `coop-core` | `src/core` | Settings, finding the game, the relay client, the session and its players, and passing messages to logs and mods | `coop-proto`, `coop-logs`, `coop-mods` |
 | `coop-logs` | `src/logs` | Finding and following logs on a player's PC, and writing them into the host's folder | `coop-proto` |
-| `coop-mods` | `src/mods` | Finding mods, their manifests, sharing and following, the host's cache, and applying a follow with backups | `coop-proto` |
+| `coop-mods` | `src/mods` | Finding mods, their manifests, sharing and following, the host's cache, and applying a follow | `coop-proto` |
 | `coop-proto` | `src/proto` | The messages players exchange, and their encoding | nothing of ours |
 
 `coop-logs` and `coop-mods` take and give messages, and never touch the network, so their tests run without a relay.
@@ -49,7 +49,6 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 | Settings | `settings.toml` in the data folder | the same |
 | The app's own log | `app.log` in the data folder, moved to `app.1.log` at 5 MB | the same |
 | The mods this PC shares and follows | `mods.toml` in the data folder | the same |
-| Backups of replaced and deleted mod files | `mod-backups/` in the data folder | the same |
 | The host's cache of mod files on their way | `mod-cache/` in the data folder | the same |
 | The host's logs | the folder chosen at setup | the same |
 

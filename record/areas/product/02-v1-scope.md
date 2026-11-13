@@ -117,7 +117,7 @@ A mod is a top-level folder in one of the game's mod places, and folders with th
   To take a folder over, the sharer stops sharing, the other player shares, and the first follows them; their copies already match, so nothing is sent.
 - Following asks first, and asks more strongly when the mod has DLLs, since mods run code inside the game.
 - Unfollowing asks whether to delete the copy too.
-  Deleting removes all its folders, after copying them to the backups; a folder that's a link to one elsewhere loses only the link.
+  Deleting removes all its folders; a folder that's a link to one elsewhere loses only the link.
   On Windows the game may hold some files, so the app offers to try again once the game is closed.
 - **Added:** each follower reports their state for each mod they follow, and the sharer sees it: up to date, fetching n of m files, needs a game restart, or paused while reconnecting.
 
@@ -139,9 +139,9 @@ A mod is a top-level folder in one of the game's mod places, and folders with th
 - The cache keeps a file for 10 minutes after its last use, and empties when the host stops.
 - If a sharer or the host goes away, everyone's copies stay as they are, and a file on its way picks up where it stopped.
 
-### Backups
+### No backups
 
-What following replaces or deletes, or unfollowing deletes, goes to the backups in the app's data folder, by time: up to 2 GB in all, the oldest going first, and no single file over 512 MB.
+- **Dropped:** CP77 Log Collector's backups of what following replaces or deletes; the user dropped them (2026-11-13), since a follower's copy is the sharer's, which the sharer still has.
 
 ## Updates and platforms
 

@@ -46,7 +46,7 @@ Done on 2026-11-13 ([logs log](../logs/log.md#2026-11-13-in-a-real-session-a-tes
 
 ## 6. Mods
 
-Sharing as the scope describes it: finding and merging, sharing and following, the host's cache, applying with backups, held files on Windows, the DLL warning, loose files, unfollowing, and each follower's state for the sharer.
+Sharing as the scope describes it: finding and merging, sharing and following, the host's cache, applying, held files on Windows, the DLL warning, loose files, unfollowing, and each follower's state for the sharer.
 
 Exit: in a test session, a file the sharer saves is in a follower's copy within 5s, a file a running program holds on Windows is replaced once it's let go, and the sharer's window shows each follower's state.
 

@@ -5,7 +5,6 @@
 //! through. Neither touches the network: the core passes their messages along as opaque bytes, and
 //! calls both from one thread.
 
-mod backups;
 mod game;
 mod hashes;
 mod hub;
@@ -20,7 +19,6 @@ use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
 
-pub use backups::Backups;
 pub use coop_proto::Doing;
 pub use hashes::Hash;
 pub use hub::Hub;
@@ -31,7 +29,7 @@ pub use player::Player;
 #[derive(Clone, Debug)]
 pub struct PlayerConfig {
     pub game_folder: PathBuf,
-    /// The app's data folder, which holds `mods.toml` and `mod-backups/`.
+    /// The app's data folder, which holds `mods.toml`.
     pub data_dir: PathBuf,
     pub install_id: String,
     pub name: String,

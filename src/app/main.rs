@@ -18,7 +18,7 @@ use gpui_kit::*;
 const USAGE: &str = "\
 Usage: cyberpunk-coop-tools [options]
 
-  --data-dir <folder>   keep settings, the app's log, and backups in this folder
+  --data-dir <folder>   keep settings and the app's log in this folder
   --demo <screen>       show a made-up session: host, tester, setup-join, or setup-host
   --name <name>         show up as this name, for test runs of several copies on one PC
   --local-app-data <folder>

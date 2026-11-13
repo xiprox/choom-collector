@@ -1,7 +1,6 @@
 //! Where mods live in the game folder, which of their files stay out of sharing, and the checks
 //! every path from another PC passes before anything is written.
 
-use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
@@ -9,7 +8,6 @@ use std::time::SystemTime;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
-use crate::backups::Backups;
 
 /// The game's mod places (record/areas/product/02-v1-scope.md#finding-mods). `Place` in
 /// `src/core/src/state.rs` lists the same seven for the window, so change both together.
@@ -319,20 +317,19 @@ pub fn has_code(path: &str) -> bool {
     [".dll", ".asi", ".exe"].iter().any(|e| lower.ends_with(e))
 }
 
-/// Takes a mod folder off this PC, all of it, the files the game wrote there included. Each file
-/// goes to the backups once however many tries this takes, which `kept` remembers. Returns how
+/// Takes a mod folder off this PC, all of it, the files the game wrote there included. Returns how
 /// many files are still there, which on Windows means the running game holds them.
-pub fn delete_folder(game: &Path, folder: &str, backups: &mut Backups, kept: &mut HashSet<PathBuf>) -> usize {
+pub fn delete_folder(game: &Path, folder: &str) -> usize {
     let dir = local(game, folder);
     if fs::symlink_metadata(&dir).is_err() {
         return 0;
     }
-    delete_tree(&dir, folder, backups, kept)
+    delete_tree(&dir)
 }
 
 /// Unlike [`walk`], this stops at a link to a folder and removes only the link, so what it points
 /// at, such as a modder's working copy of the mod, isn't touched.
-fn delete_tree(dir: &Path, rel: &str, backups: &mut Backups, kept: &mut HashSet<PathBuf>) -> usize {
+fn delete_tree(dir: &Path) -> usize {
     let Ok(meta) = fs::symlink_metadata(dir) else { return 0 };
     if meta.file_type().is_symlink() {
         return usize::from(remove_link(dir).is_err());
@@ -342,22 +339,16 @@ fn delete_tree(dir: &Path, rel: &str, backups: &mut Backups, kept: &mut HashSet<
         Ok(entries) => {
             for e in entries.flatten() {
                 let path = e.path();
-                let name = e.file_name().to_string_lossy().into_owned();
                 let Ok(kind) = e.file_type() else {
                     left += 1;
                     continue;
                 };
                 if kind.is_dir() {
-                    left += delete_tree(&path, &format!("{rel}/{name}"), backups, kept);
+                    left += delete_tree(&path);
                 } else if kind.is_symlink() && fs::metadata(&path).is_ok_and(|m| m.is_dir()) {
                     left += usize::from(remove_link(&path).is_err());
-                } else {
-                    if !kept.contains(&path) && backups.keep(&path, &format!("{rel}/{name}")) {
-                        kept.insert(path.clone());
-                    }
-                    if fs::remove_file(&path).is_err() {
-                        left += 1;
-                    }
+                } else if fs::remove_file(&path).is_err() {
+                    left += 1;
                 }
             }
         }

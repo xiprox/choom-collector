@@ -11,7 +11,7 @@ The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [wr
 - [areas/network/log.md](areas/network/log.md): what the relay's tests found about routing, a host's drop, and refusals.
 - [areas/logs/01-collecting.md](areas/logs/01-collecting.md): how each player's logs are found, followed by content, and written into the host's session folder.
 - [areas/logs/log.md](areas/logs/log.md): what coop-logs' tests and a real session found, and what it changes from CP77 Log Collector.
-- [areas/mods/01-sharing.md](areas/mods/01-sharing.md): how mods are found and merged, shared and followed through the host's hub, and applied with backups.
+- [areas/mods/01-sharing.md](areas/mods/01-sharing.md): how mods are found and merged, shared and followed through the host's hub, and applied.
 - [areas/mods/log.md](areas/mods/log.md): what coop-mods' tests and a real session found, and what it changes from CP77 Log Collector.
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
 - [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
