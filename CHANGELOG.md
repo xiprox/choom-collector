@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.0](https://github.com/xiprox/cyberpunk-coop-tools/compare/v0.2.0...v0.3.0) (2026-11-13)
+
+
+### Features
+
+* share mods through the host's hub, and follow them from the window ([fa32687](https://github.com/xiprox/cyberpunk-coop-tools/commit/fa326877d5469f4dc324def366d7813f2dd96fd4))
+* share mods with the session and keep each follower's copy the same as the sharer's ([69dd743](https://github.com/xiprox/cyberpunk-coop-tools/commit/69dd743c2d3d05c823e36cd3addd359974d456a9))
+
 ## [0.2.0](https://github.com/xiprox/cyberpunk-coop-tools/compare/v0.1.0...v0.2.0) (2026-11-13)
 
 
