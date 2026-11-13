@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0](https://github.com/xiprox/choom-collector/compare/v0.3.0...v0.4.0) (2026-11-13)
+
+
+### ⚠ BREAKING CHANGES
+
+* the pack ID changed, so a copy installed as Cyberpunk Co-op Tools can't update to this one; install Choom Collector once.
+
+### Features
+
+* a calmer header and sidebar, a mods drawer, one button shape, and no mod backups ([54d1d93](https://github.com/xiprox/choom-collector/commit/54d1d93199c3462dd6885fb8c52cb5f9543ac4bd))
+* draw in IBM Plex on near-black, on a 4px grid, with an icon of its own ([9f86248](https://github.com/xiprox/choom-collector/commit/9f86248011e62ca5d77a73b3eb4c2b9d0f0f3b90))
+* rename the app to Choom Collector ([92b3f75](https://github.com/xiprox/choom-collector/commit/92b3f75447d8c0902ce73f1be9cfcac91af8d44d))
+
+
+### Bug Fixes
+
+* size the mods table's columns as the frame does ([f61c6d8](https://github.com/xiprox/choom-collector/commit/f61c6d89f7cacd3293d2391fd7c44eb011674716))
+* take real clicks on the title bar's buttons, and tidy the session window ([6513961](https://github.com/xiprox/choom-collector/commit/651396106004755a23921ce2608113cfa492fc8c))
+
 ## [0.3.0](https://github.com/xiprox/cyberpunk-coop-tools/compare/v0.2.0...v0.3.0) (2026-11-13)
 
 
