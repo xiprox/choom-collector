@@ -461,7 +461,7 @@ impl Core {
                     let message = format!("{e:#}");
                     // Another host holding the code won't change by trying again soon.
                     let held = message.contains("another host");
-                    host.problem = Some(if held { "Another host is using this code. Stop, then pick New code.".into() } else { format!("Can't reach the relay: {message}") });
+                    host.problem = Some(if held { "Another host is using this code. Stop, then pick New code.".into() } else { relay_problem(&self.settings.relay, &message) });
                     host.link = Link::Reconnecting;
                     if !self.show_hosting(&host) {
                         return Ended::AppClosing;
@@ -632,7 +632,7 @@ impl Core {
                     } else if message.contains("session-full") {
                         (Link::Reconnecting, Some("The session is full: it has 8 testers already".to_string()))
                     } else {
-                        (Link::Reconnecting, Some(format!("Can't reach the relay: {message}")))
+                        (Link::Reconnecting, Some(relay_problem(&self.settings.relay, &message)))
                     };
                     joined.link = state;
                     joined.problem = problem;
@@ -1103,6 +1103,7 @@ fn player(info: &PlayerInfo, me: u64, reconnecting: bool) -> Player {
                 Doing::Nothing => PlayerState::Fine,
                 Doing::Fetching { done, total } => PlayerState::Fetching { done, total },
                 Doing::NeedsRestart => PlayerState::NeedsRestart,
+                Doing::Held => PlayerState::Held,
             }
         },
         sources: None,
@@ -1166,6 +1167,7 @@ fn delivery(d: coop_mods::Delivery) -> Delivery {
         coop_mods::Delivery::UpToDate => Delivery::UpToDate,
         coop_mods::Delivery::Fetching { done, total } => Delivery::Fetching { done, total },
         coop_mods::Delivery::NeedsRestart => Delivery::NeedsRestart,
+        coop_mods::Delivery::Held => Delivery::Held,
         coop_mods::Delivery::Paused => Delivery::Paused,
     }
 }
@@ -1187,6 +1189,7 @@ fn shared_mod(m: coop_mods::SharedMod) -> SharedMod {
             S::UpToDate => ModStatus::UpToDate,
             S::Fetching { done, total } => ModStatus::Fetching { done, total },
             S::NeedsRestart => ModStatus::NeedsRestart,
+            S::Held => ModStatus::Held,
             S::Checking => ModStatus::Checking,
             S::NotOnYourPc => ModStatus::NotOnYourPc,
             S::OnYourPc { same } => ModStatus::OnYourPc { same },
@@ -1199,6 +1202,29 @@ fn shared_mod(m: coop_mods::SharedMod) -> SharedMod {
         },
         changed: (m.changed > 0).then(|| Local.timestamp_opt(m.changed, 0).single()).flatten(),
         followers: m.followers.into_iter().map(|f| Follower { name: f.name, delivery: delivery(f.delivery) }).collect(),
+    }
+}
+
+/// Why the relay can't be reached, in words for the player, from the error under it, which the app's
+/// log keeps in full.
+fn relay_problem(relay: &str, error: &str) -> String {
+    log::info!("can't reach the relay: {error}");
+    let e = error.to_lowercase();
+    let says = |needles: &[&str]| needles.iter().any(|n| e.contains(n));
+    if says(&["no such host", "11001", "name or service not known", "failed to lookup", "nodename nor servname", "dns"]) {
+        format!("Can't find {relay}. Check the relay's address in Settings, or your connection.")
+    } else if says(&["timed out", "timeout", "10060"]) {
+        format!("{relay} isn't answering. Check your connection; the app keeps trying.")
+    } else if says(&["refused", "10061"]) {
+        format!("{relay} refused the connection. Check the relay's address in Settings.")
+    } else if says(&["certificate", "tls", "ssl"]) {
+        format!("Can't connect securely to {relay}. Check the relay's address in Settings.")
+    } else if says(&["limiting attempts"]) {
+        "The relay is limiting attempts from this network. The app tries again in a minute.".into()
+    } else if says(&["malformed"]) {
+        "The relay says the code is malformed. Check the code in Settings.".into()
+    } else {
+        format!("Can't reach {relay}. The app keeps trying; the app's log has the details.")
     }
 }
 

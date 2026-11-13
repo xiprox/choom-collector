@@ -14,10 +14,10 @@ use crate::theme::*;
 use crate::ui::*;
 use crate::view::{AppView, Asking};
 
-// The frame's columns (experiments/areas/interface/frames/WindowHost.dc.html), measured in it.
+// The frame's columns (experiments/areas/interface/frames/WindowHost.dc.html), on the 4px grid.
 const FOLLOW_COL: Pixels = px(72.);
 const SHARER_COL: Pixels = px(104.);
-const STATUS_COL: Pixels = px(246.);
+const STATUS_COL: Pixels = px(248.);
 const CHANGED_COL: Pixels = px(84.);
 
 /// "2.31, Steam", or as much of it as the player's PC could tell.
@@ -101,10 +101,10 @@ impl AppView {
             .child(
                 h_flex()
                     .gap(px(8.))
-                    .child(mark(px(14.)))
+                    .child(mark(px(16.)))
                     .child(
                         h_flex()
-                            .gap(px(2.))
+                            .gap(px(4.))
                             .child(mono(cx, code(&s.code)).text_size(TEXT_SIZE).font_weight(FontWeight::MEDIUM).text_color(color(STRONG)))
                             // Only the host hands out the invite; a tester has nobody to send it to.
                             .when(s.role == Role::Host, |r| {
@@ -124,10 +124,10 @@ impl AppView {
             .child(
                 h_flex()
                     .pr(px(8.))
-                    .gap(px(2.))
+                    .gap(px(4.))
                     .when_some(update.map(str::to_string), |b, next| {
                         b.child(
-                            div().mr(px(6.)).child(
+                            div().mr(px(8.)).child(
                                 accent_button("apply-update", "Restart to update")
                                     .h(px(24.))
                                     .tooltip(move |window, cx| Tooltip::new(format!("Installs version {next} and starts again")).build(window, cx))
@@ -162,7 +162,7 @@ impl AppView {
                 .px(px(12.))
                 .gap(px(8.))
                 .when(selected == Some(p.id), |r| r.bg(color(RAISED)))
-                .when(can_open && selected != Some(p.id), |r| r.cursor_pointer().hover(|r| r.bg(color(0x1f2329))))
+                .when(can_open && selected != Some(p.id), |r| r.cursor_pointer().hover(|r| r.bg(color(HOVER))))
                 .child(div().flex_1().min_w_0().truncate().text_color(color(if selected == Some(p.id) { STRONG } else { TEXT })).child(p.name.clone()))
                 .when_some(state, |r, state| r.child(div().text_size(SMALL_SIZE).text_color(color(hex)).child(state)))
                 .when(can_open, |r| {
@@ -218,7 +218,7 @@ impl AppView {
                         SourceKind::GameOwn => text("The game's own logs and settings".into(), TEXT),
                         SourceKind::AppLog => text("This app's log".into(), TEXT),
                         SourceKind::Extra { pattern } => h_flex()
-                            .gap(px(6.))
+                            .gap(px(8.))
                             .min_w_0()
                             .child(div().font_family(mono_family.clone()).text_color(color(hex)).truncate().child(pattern.clone()))
                             .when(s.role == Role::Tester, |r| r.child(div().text_color(color(MUTED)).child(format!("from {}", s.host_name))))
@@ -235,7 +235,7 @@ impl AppView {
             .gap(px(12.))
             .child(
                 h_flex()
-                    .gap(px(6.))
+                    .gap(px(8.))
                     .child(div().font_weight(FontWeight::SEMIBOLD).text_color(color(STRONG)).child(p.name.clone()))
                     .when(p.is_me, |r| r.child(div().text_color(color(MUTED)).child("you"))),
             )
@@ -333,12 +333,12 @@ impl AppView {
                 .child(
                     h_flex()
                         .id(("tiles", i))
-                        .gap(px(2.))
+                        .gap(px(4.))
                         .children(m.followers.iter().map(|f| {
                             let (bg, fg) = match f.delivery {
                                 Delivery::UpToDate => (DONE, ON_ACCENT),
                                 Delivery::Fetching { .. } => (ACCENT, ON_ACCENT),
-                                Delivery::NeedsRestart => (WARNING, ON_ACCENT),
+                                Delivery::NeedsRestart | Delivery::Held => (WARNING, ON_ACCENT),
                                 Delivery::Paused => (CONTROL, MUTED),
                             };
                             tile(cx, &f.name, bg, fg)
@@ -351,6 +351,7 @@ impl AppView {
                                         Delivery::UpToDate => ("Up to date".to_string(), TEXT),
                                         Delivery::Fetching { done, total } => (format!("Fetching {done} of {total} files"), ACCENT),
                                         Delivery::NeedsRestart => ("Has it, needs a game restart".to_string(), WARNING),
+                                        Delivery::Held => ("Has it, waiting for a program to let go of the old files".to_string(), WARNING),
                                         Delivery::Paused => ("Paused while reconnecting".to_string(), MUTED),
                                     };
                                     h_flex().child(div().w(px(56.)).child(f.name.clone())).child(div().text_color(color(hex)).child(words))
@@ -366,6 +367,7 @@ impl AppView {
                 ModStatus::UpToDate => ("Up to date".to_string(), MUTED),
                 ModStatus::Fetching { done, total } => (format!("Fetching {done} of {total} files"), ACCENT),
                 ModStatus::NeedsRestart => ("Restart the game to load it".to_string(), ACCENT),
+                ModStatus::Held => ("Waiting for a program to let go of the old files".to_string(), WARNING),
                 ModStatus::NotOnYourPc => ("Not on your PC".to_string(), MUTED),
                 ModStatus::AddedFolder => ("Added a folder, tick to take it".to_string(), ACCENT),
                 ModStatus::Paused => ("Paused while reconnecting".to_string(), MUTED),
@@ -424,7 +426,7 @@ impl AppView {
             .left(px(40.))
             .w(px(320.))
             .p(px(12.))
-            .gap(px(10.))
+            .gap(px(12.))
             .bg(color(RAISED))
             .border_1()
             .border_color(color(CONTROL))
@@ -434,12 +436,12 @@ impl AppView {
                 v_flex()
                     .gap(px(4.))
                     .child(div().font_weight(FontWeight::SEMIBOLD).text_color(color(STRONG)).child(title))
-                    .child(div().text_size(SMALL_SIZE).line_height(px(18.)).text_color(color(MUTED)).child(body)),
+                    .child(div().text_size(SMALL_SIZE).line_height(px(20.)).text_color(color(MUTED)).child(body)),
             )
             .child(
                 h_flex()
-                    .gap(px(6.))
-                    .child(accent_button("answer-yes", yes).h(px(24.)).px(px(10.)).on_click(cx.listener(move |view, _, _, cx| {
+                    .gap(px(8.))
+                    .child(accent_button("answer-yes", yes).h(px(24.)).px(px(12.)).on_click(cx.listener(move |view, _, _, cx| {
                         let key = key_yes.clone();
                         view.send(if is_follow { Command::Follow { key, on: true } } else { Command::Unfollow { key, delete_copy: false } });
                         view.asking = None;
@@ -499,7 +501,7 @@ impl AppView {
                     .child(
                         h_flex()
                             .id(("places", i))
-                            .w(px(262.))
+                            .w(px(264.))
                             .px(px(8.))
                             .gap(px(4.))
                             .text_color(color(if loose.is_some() { WARNING } else { MUTED }))
@@ -538,7 +540,7 @@ impl AppView {
                 h_flex()
                     .flex_1()
                     .min_w_0()
-                    .gap(px(6.))
+                    .gap(px(8.))
                     .child(div().flex_shrink_0().child("Logs go to"))
                     .child(mono(cx, shown).min_w_0().truncate())
                     .child(
@@ -594,6 +596,7 @@ fn player_state(s: &Session, p: &Player, host_version: Option<&str>) -> (Option<
         (PlayerState::Reconnecting, _) => (Some("Reconnecting".into()), WARNING),
         (PlayerState::NeedsRestart, Role::Host) if off_version => (Some(format!("Game {}, needs a restart", p.game_version)), WARNING),
         (PlayerState::NeedsRestart, Role::Host) => (Some("Needs a restart".into()), WARNING),
+        (PlayerState::Held, Role::Host) => (Some("Waiting for a program".into()), WARNING),
         (PlayerState::Fetching { done, total }, Role::Host) => (Some(format!("Fetching {done} of {total}")), ACCENT),
         _ if p.is_host && p.is_me => (Some("You, hosting".into()), MUTED),
         _ if p.is_host => (Some("Hosting".into()), MUTED),

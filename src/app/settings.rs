@@ -97,7 +97,7 @@ impl AppView {
         let form = &self.settings;
 
         let field = |label_text: &'static str, control: AnyElement, helper: AnyElement| {
-            v_flex().gap(px(6.)).child(label(label_text)).child(control).child(helper)
+            v_flex().gap(px(8.)).child(label(label_text)).child(control).child(helper)
         };
         let helper = |text: String| div().text_size(SMALL_SIZE).text_color(color(MUTED)).child(text).into_any_element();
 
@@ -173,7 +173,7 @@ impl AppView {
             .child(
                 h_flex()
                     .pr(px(8.))
-                    .gap(px(6.))
+                    .gap(px(8.))
                     .child(plain_button("cancel-settings", "Cancel", None).on_click(cx.listener(|view, _, _, cx| {
                         view.settings_open = false;
                         cx.notify();

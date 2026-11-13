@@ -23,7 +23,7 @@ impl AppView {
                 .flex()
                 .items_center()
                 .h_full()
-                .px(px(14.))
+                .px(px(16.))
                 .cursor_pointer()
                 .map(|t| if role == this { t.bg(color(RAISED)).text_color(color(STRONG)) } else { t.text_color(color(MUTED)) })
                 .child(text)
@@ -44,7 +44,7 @@ impl AppView {
         );
 
         let field = |label_text: &'static str, control: AnyElement, helper: AnyElement| {
-            v_flex().gap(px(6.)).child(label(label_text)).child(control).child(helper)
+            v_flex().gap(px(8.)).child(label(label_text)).child(control).child(helper)
         };
         let helper = |text: String| div().text_size(SMALL_SIZE).text_color(color(MUTED)).child(text).into_any_element();
         let change_game = outline_button("change-game", "Change").on_click(cx.listener(|view, _, _, cx| view.pick_folder(true, cx)));
@@ -139,7 +139,7 @@ impl AppView {
                                 .child(mark(px(28.)))
                                 .child(
                                     v_flex()
-                                        .gap(px(2.))
+                                        .gap(px(4.))
                                         .child(div().text_size(TITLE_SIZE).line_height(px(20.)).font_weight(FontWeight::SEMIBOLD).text_color(color(STRONG)).child("Cyberpunk Co-op Tools"))
                                         .child(div().text_size(SMALL_SIZE).text_color(color(MUTED)).child("The host's mod builds go out to everyone, and everyone's logs go back to the host")),
                                 ),

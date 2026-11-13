@@ -134,6 +134,7 @@ impl Render for AppView {
         v_flex()
             .size_full()
             .bg(color(BASE))
+            .font_family(FONT)
             .text_color(color(TEXT))
             .text_size(TEXT_SIZE)
             .line_height(LINE_HEIGHT)

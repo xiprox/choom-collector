@@ -453,6 +453,7 @@ impl Player {
         match Delivery::combine(all) {
             Some(Delivery::Fetching { done, total }) => Doing::Fetching { done, total },
             Some(Delivery::NeedsRestart) => Doing::NeedsRestart,
+            Some(Delivery::Held) => Doing::Held,
             _ => Doing::Nothing,
         }
     }
@@ -736,7 +737,7 @@ impl Player {
         } else if !held.is_empty() {
             // The game holds the old file; once it lets go the new one lands, and the game loads it
             // when it starts again.
-            Some(if self.game_up { Delivery::NeedsRestart } else { fetching })
+            Some(if self.game_up { Delivery::NeedsRestart } else { Delivery::Held })
         } else if unknown > 0 {
             state.delivery.clone()
         } else if self.stale_in_game.contains(&lower) {
@@ -995,6 +996,7 @@ impl Player {
         }
         match Delivery::combine(states.into_iter().flatten()) {
             Some(Delivery::NeedsRestart) => ModStatus::NeedsRestart,
+            Some(Delivery::Held) => ModStatus::Held,
             Some(Delivery::Paused) => ModStatus::Paused,
             _ => ModStatus::UpToDate,
         }

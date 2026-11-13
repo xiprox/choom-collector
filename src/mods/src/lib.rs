@@ -112,6 +112,9 @@ pub enum ModStatus {
     UpToDate,
     Fetching { done: u32, total: u32 },
     NeedsRestart,
+    /// Followed, and the new files are here, but a program other than the game holds the old ones,
+    /// so they land once it lets go.
+    Held,
     /// Followed, and the copy here is still being hashed to compare it.
     Checking,
     /// Not followed, and none of its folders are on this PC.
@@ -146,19 +149,24 @@ pub enum Delivery {
     Fetching { done: u32, total: u32 },
     /// The follower has the change, and the game they're running loaded the old files.
     NeedsRestart,
+    /// The follower has the change, waiting for a program other than the game to let go of the old
+    /// files.
+    Held,
     /// The follower's link to the host is down.
     Paused,
 }
 
 impl Delivery {
-    /// One state for several folders: paused or fetching if any is, then a restart if any needs one.
+    /// One state for several folders: paused or fetching if any is, then held, then a restart if any
+    /// needs one.
     pub(crate) fn combine<'a>(all: impl IntoIterator<Item = &'a Delivery>) -> Option<Delivery> {
-        let (mut any, mut paused, mut restart, mut fetching) = (false, false, false, None::<(u32, u32)>);
+        let (mut any, mut paused, mut restart, mut held, mut fetching) = (false, false, false, false, None::<(u32, u32)>);
         for d in all {
             any = true;
             match d {
                 Delivery::Paused => paused = true,
                 Delivery::NeedsRestart => restart = true,
+                Delivery::Held => held = true,
                 Delivery::Fetching { done, total } => {
                     let (d0, t0) = fetching.unwrap_or((0, 0));
                     fetching = Some((d0 + done, t0 + total));
@@ -170,6 +178,7 @@ impl Delivery {
             (false, ..) => return None,
             (_, true, ..) => Delivery::Paused,
             (_, _, Some((done, total)), _) => Delivery::Fetching { done, total },
+            _ if held => Delivery::Held,
             (_, _, _, true) => Delivery::NeedsRestart,
             _ => Delivery::UpToDate,
         })

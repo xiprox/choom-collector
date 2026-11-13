@@ -31,7 +31,7 @@ pub fn plain_button(id: impl Into<ElementId>, text: impl Into<SharedString>, lea
         .occlude()
         .h(px(24.))
         .px(px(8.))
-        .gap(px(6.))
+        .gap(px(8.))
         .rounded(RADIUS)
         .text_color(color(TEXT))
         .cursor_pointer()
@@ -67,7 +67,7 @@ pub fn outline_button(id: impl Into<ElementId>, text: impl Into<SharedString>) -
         // instead of Windows taking it as a grab of the bar to move the window.
         .occlude()
         .h(px(24.))
-        .px(px(10.))
+        .px(px(12.))
         .rounded(RADIUS)
         .border_1()
         .border_color(color(CONTROL))
@@ -119,14 +119,14 @@ pub fn checkbox(id: impl Into<ElementId>, check: Check, focused: bool) -> Statef
         .flex()
         .items_center()
         .justify_center()
-        .size(px(14.))
+        .size(px(16.))
         .rounded(RADIUS)
         .cursor_pointer()
         .map(|b| match mark {
             Some(_) => b.bg(color(ACCENT)),
             None => b.border_1().border_color(color(if focused { ACCENT } else { CONTROL })),
         })
-        .when_some(mark, |b, name| b.child(Icon::new(name).with_size(px(10.)).text_color(color(ON_ACCENT))))
+        .when_some(mark, |b, name| b.child(Icon::new(name).with_size(px(12.)).text_color(color(ON_ACCENT))))
 }
 
 /// A follower's tile in a shared mod's status: their initial, colored by their state.

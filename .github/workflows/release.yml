@@ -51,9 +51,11 @@ jobs:
           - os: windows-latest
             channel: win-x64
             exe: cyberpunk-coop-tools.exe
+            icon: assets/icon/app.ico
           - os: ubuntu-22.04
             channel: linux-x64
             exe: cyberpunk-coop-tools
+            icon: assets/icon/app.png
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -117,7 +119,7 @@ jobs:
       - name: Pack
         run: |
           vpk pack -u "$PACK_ID" --packTitle "Cyberpunk Co-op Tools" -v "$VERSION" \
-            -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases
+            -p publish -e "${{ matrix.exe }}" -c "$CHANNEL" -o Releases -i "${{ matrix.icon }}"
 
       - name: Attach to the release
         if: github.event_name == 'push'

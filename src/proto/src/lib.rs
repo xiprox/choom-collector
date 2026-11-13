@@ -86,6 +86,8 @@ pub enum Doing {
     Nothing,
     Fetching { done: u32, total: u32 },
     NeedsRestart,
+    /// Mods fetched, waiting for a program other than the game to let go of the old files.
+    Held,
 }
 
 pub fn encode<T: Serialize>(message: &T) -> Vec<u8> {

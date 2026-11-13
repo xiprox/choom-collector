@@ -74,6 +74,7 @@ fn main() -> ExitCode {
 
     gpui_kit::application().with_assets(assets::Assets).run(move |cx: &mut App| {
         gpui_kit::init(cx);
+        assets::load_fonts(cx);
         Theme::change(ThemeMode::Dark, None, cx);
         theme::apply(cx);
         cx.on_window_closed(|cx, _| {

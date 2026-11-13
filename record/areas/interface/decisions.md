@@ -52,17 +52,18 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
 
   | Role | Value |
   | --- | --- |
-  | Base, the mods panel | `#15171b` |
-  | Panel, the players panel and bars | `#1a1d22` |
-  | Raised, selection and popovers | `#232830` |
-  | Line | `#272b32` |
-  | Line between rows | `#1e2126` |
-  | Control, borders and empty checkboxes | `#3a404a` |
-  | Text | `#dfe2e7` |
-  | Strong text | `#f4f5f7` |
-  | Muted text | `#959cab` |
-  | Accent: what's yours or happening now | `#ddc94f`, with `#15171b` on it |
-  | Done | `#8b94a3` |
+  | Base, the mods panel | `#08080a` |
+  | Panel, the players panel and bars | `#0d0d10` |
+  | Raised, selection and popovers | `#18181c` |
+  | Line | `#1e1e23` |
+  | Line between rows | `#141418` |
+  | Control, borders and empty checkboxes | `#303036` |
+  | Text | `#e3e3e8` |
+  | Strong text | `#f4f4f7` |
+  | Muted text | `#96969f` |
+  | Placeholders | `#58585f` |
+  | Accent: what's yours or happening now | `#ddc94f`, with `#08080a` on it |
+  | Done | `#8c8c95` |
   | Warning: something's off | `#e89b5e` |
   | Trouble: something broke | `#e5736e` |
 
@@ -72,10 +73,11 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   | Codes, sizes, and paths | IBM Plex Mono, 12px or 13px |
   | The setup screen's name | IBM Plex Sans, 16px, semibold |
   | Title bar, section headers, status bar | 32px, 28px, 24px tall |
-  | Rows | 26px tall |
+  | Rows | 28px tall |
+  | Spacing and sizes | multiples of 4px |
   | Buttons and inputs | 24px or 28px tall |
-  | Corners | 3px; the window's from the system |
-  | Icons | Lucide, as gpui-kit ships it, 14px |
+  | Corners | 4px; the window's from the system |
+  | Icons | Lucide, as gpui-kit ships it, 16px |
 
   - The accent marks what's the player's own or happening now: the mark, the selection on the focused row, checked checkboxes, fetching, and the one filled button on a screen.
   - Nothing is green: what's fine stays gray.
@@ -83,7 +85,9 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   - Buttons are plain by default, and show what they do in a tooltip.
 - **Because:** the user found the first rounds felt like a web app, then like a game launcher, and wanted Zed's "no-nonsense feel" without becoming "a plain zed copy and too plain / colorless / everything blending together" (rounds 1, 2, and 5 of the log entry).
   Zed's color comes from syntax highlighting, which a list of mods and players doesn't have, so color here carries meaning instead.
-- **Leaves out:** a light theme, since the user didn't ask for one, and IBM Plex itself until its font files are in the repository: the window draws with the system's fonts meanwhile ([log](log.md#2026-11-13-the-window-draws-every-frame-in-gpui-from-made-up-state)).
+  The grays are near-black with a touch of blue: the user asked for a "clean, neutral, professional black" in the polish pass, found exact neutral grays read yellowish, and moved spacing to a 4px grid (2026-11-13).
+- **Leaves out:** a light theme, since the user didn't ask for one.
+  IBM Plex is built into the program from `assets/fonts/`, under the SIL Open Font License.
 
 ## Following and unfollowing ask first
 
