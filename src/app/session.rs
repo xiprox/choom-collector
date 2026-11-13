@@ -14,10 +14,11 @@ use crate::theme::*;
 use crate::ui::*;
 use crate::view::{AppView, Asking};
 
-const FOLLOW_COL: Pixels = px(52.);
-const SHARER_COL: Pixels = px(88.);
-const STATUS_COL: Pixels = px(230.);
-const CHANGED_COL: Pixels = px(64.);
+// The frame's columns (experiments/areas/interface/frames/WindowHost.dc.html), measured in it.
+const FOLLOW_COL: Pixels = px(72.);
+const SHARER_COL: Pixels = px(104.);
+const STATUS_COL: Pixels = px(246.);
+const CHANGED_COL: Pixels = px(84.);
 
 /// "2.31, Steam", or as much of it as the player's PC could tell.
 fn game_line(p: &Player) -> String {
