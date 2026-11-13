@@ -1,7 +1,24 @@
 # Cyberpunk Co-op Tools
 
 Play Cyberpunk 2077 together: everyone's logs in one place, and mods shared between friends.
-A Rust rewrite of CP77 Log Collector, at its very start: the app itself is a placeholder for now.
+A Rust rewrite of CP77 Log Collector, for groups that test mods together.
+
+- **Logs:** every player's game, mod, and crash logs go to the host as they're written, into a
+  folder per session and per player, ready to hand to Claude or anyone else to read.
+- **Mods:** whoever builds a mod shares it with a tick, and the friends who follow it get each
+  build in their game folder.
+
+The host and the testers run the same app. Everyone connects through a relay the host runs on
+Cloudflare's free plan, so nobody opens a port; [relay/README.md](relay/README.md) shows how to
+set one up.
+
+It's for Cyberpunk 2077 only. A fork for another game is welcome.
+
+## Status
+
+Before 1.0, and being built: logs work end to end, mod sharing is on its way, and the look gets
+its last pass at the end. [record/areas/product/plan.md](record/areas/product/plan.md) has the
+stages and where each one stands.
 
 ## Releases
 
@@ -23,3 +40,7 @@ To try the packaging without releasing anything: Actions → Release → Run wor
 packages are kept as that run's artifacts.
 
 CI builds and tests both platforms on every push.
+
+## License
+
+MIT; see [LICENSE](LICENSE).
