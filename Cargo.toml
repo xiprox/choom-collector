@@ -20,6 +20,7 @@ gpui-kit = "=0.9.1"
 # .github/workflows/release.yml, as the packages vpk makes are read by this crate.
 velopack = "=1.2.161"
 async-channel = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [workspace]
 members = ["src/core", "src/logs", "src/mods", "src/proto"]

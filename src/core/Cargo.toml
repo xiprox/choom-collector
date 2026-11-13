@@ -8,4 +8,5 @@ publish = false
 coop-proto = { path = "../proto" }
 coop-logs = { path = "../logs" }
 coop-mods = { path = "../mods" }
-
+async-channel = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

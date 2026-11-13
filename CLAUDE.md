@@ -5,9 +5,9 @@ Don't write product code until a stage in [the plan](record/areas/product/plan.m
 
 ## Layout
 
-- `src/` holds the product's Rust crates, in the Cargo workspace at the root, as [the spine](record/areas/architecture/01-spine.md#crates) lays them out.
+- Put the product's Rust crates under `src/`, in the one Cargo workspace at the root, as [the spine](record/areas/architecture/01-spine.md#crates) lays them out.
   A new part goes in a crate under `src/`, never a new folder at the root.
-- `relay/` holds the relay, a Cloudflare Worker in TypeScript, forked from fsc-editor's ([decision 003](record/decisions/003-relay-forked-from-fsc-editor.md)).
+- Put the relay in `relay/`: a Cloudflare Worker in TypeScript, forked from fsc-editor's ([decision 003](record/decisions/003-relay-forked-from-fsc-editor.md)).
 - `record/` holds the documents agents write.
   [record/index.md](record/index.md) is the map.
   Keep its top level to `index.md`, `decisions/`, and `areas/`, with a folder under `areas/` for each part of the app.
@@ -28,7 +28,7 @@ Read and run them, but don't edit their files, commit, or switch branches there.
 | Path | What's there | Cite as |
 | --- | --- | --- |
 | `../cp77-log-collector/` | The C# app: logs to the host, mod sharing, the relay client, game detection on Windows and Linux. | CP77 Log Collector |
-| `../../fsc-editor/relay/` | The relay we forked, a Cloudflare Worker with one Durable Object per code. | fsc-editor |
+| `../../fsc-editor/relay/` and `../../fsc-editor/src/shared/remote-connect.ts` | The relay we forked, a Cloudflare Worker with one Durable Object per code, and the constants and frame types it imports from the second file. | fsc-editor |
 | `../../crosscheck/` | Dual Input, where this record's conventions come from. | Dual Input |
 
 When the record uses one of their findings, restate it and cite it as [Evidence](.claude/rules/writing.md#evidence) describes.
@@ -43,8 +43,7 @@ Before leaving a failure uncovered, or taking out a mechanism CP77 Log Collector
 **Before a test run, give the app its own data folder** with `--data-dir`, and its own session code.
 The user's friends play with CP77 Log Collector from `../cp77-log-collector/dist/stable`, so never run, stop, or replace that copy, and never touch the settings in `%APPDATA%\CP77LogCollector\` or its TCP port 47077.
 
-**Commit messages are Conventional Commits**, as [writing.md](.claude/rules/writing.md#commit-messages) describes, because release-please reads them to choose versions and write the changelog.
-A commit that meets a plan stage's exit criterion also marks the stage done.
+**A commit that meets a plan stage's exit criterion adds the stage's "Done on" line**, as [the plan](record/areas/product/plan.md) says, so the plan never lags the code.
 
 **Commit only the changes you made.**
 Other sessions may edit this working tree too, so `git add -A` would put their unfinished work in your commit.
@@ -67,4 +66,7 @@ It can't see inside images, so check screenshots by eye before adding them.
 
 `cargo build` builds the workspace.
 The window's crate, `src/app`, compiles gpui, which takes minutes from clean, so iterate with `cargo run -p cyberpunk-coop-tools` in the dev profile.
-A Linux build needs the X11, Wayland, xkbcommon, and fontconfig development packages: CI's Ubuntu 22.04 runner installs them, and locally it runs in WSL.
+A Linux build needs the X11, Wayland, xkbcommon, and fontconfig development packages, which CI's Ubuntu 22.04 runner installs.
+Before a Linux build in WSL, ask the user to run ci.yml's `apt-get install` line there, since it needs their sudo password.
+
+`tools/capture-window.ps1` starts the program, saves a picture of its window, and closes it without taking the focus; `-Click` and `-Hover` act on the window first, for a check of a popover or tooltip.

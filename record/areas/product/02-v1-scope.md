@@ -11,24 +11,25 @@ Each behavior below that comes from the C# app is read in its README or source, 
 
 ## Sessions
 
-Read in CP77 Log Collector, README.md, "Use" and "Getting the others connected", and src/Relay.cs.
+Read in CP77 Log Collector, README.md, "Use" and "Getting the others connected", and src/Relay.cs, src/Sender.cs, and src/Settings.cs.
+The relay's limits, codes, and timings are in [relay and sessions](../network/01-relay-and-sessions.md).
 
-- A session is a host and up to 8 testers, joined through the host's relay by a 6-character code from the alphabet `23456789ABCDEFGHJKMNPQRSTVWXYZ`, shown as `K7R-M2Q`.
-  The relay sets the 8 (fsc-editor, `MAX_GUESTS`).
-- The host's code is generated once and kept.
-  The relay gives the host a resume token with it, kept in the settings, so only that PC can take the code back after a drop or a restart.
+- A session is a host and the testers who joined through the host's relay with the host's code.
+- The host's code is generated once and kept in the settings, so testers type it once.
 - **Changed:** setup happens once.
   The first run asks for Host or Join, the relay's address, and for a tester the code; a pasted `relay.example.net/K7R-M2Q` fills both.
   From then on the app hosts or joins by itself every time it starts, and a tester whose host isn't up yet waits and joins when the host appears.
-- **Changed:** the player's name comes from Steam, the `PersonaName` of the most recent account in Steam's `config/loginusers.vdf`, or else the system's user name, and it isn't editable.
-- If the host's link to the relay drops, the relay waits 30s for it to come back before ending the session, and testers reconnect with retries at 500ms, 1.5s, 4s, and 8s.
+- The player's name comes from Steam, the `PersonaName` of the most recent account in Steam's `config/loginusers.vdf`, or else the system's user name.
+  **Changed:** it isn't editable.
+- A tester whose link drops tries again every 5s, or after 1s when the host asks it to.
+  **Changed:** testers retry quickly at first and then every 8s, as [relay and sessions](../network/01-relay-and-sessions.md#reconnecting) describes.
   After a reconnect, a tester resumes from what the host has, so nothing is sent twice and nothing is lost.
 - **Dropped:** the direct TCP connection on port 47077, UPnP, and the per-session choice of relay ([decision 003](../../decisions/003-relay-forked-from-fsc-editor.md)).
 - **Added:** every player reports their game version, and a tester whose version differs from the host's is told so.
 
 ## Logs
 
-Read in CP77 Log Collector, README.md, "What it collects" and "What the host gets", and src/Sender.cs.
+Read in CP77 Log Collector, README.md, "What it collects" and "What the host gets", src/Sender.cs, and src/Common.cs.
 
 ### What's picked up
 
@@ -37,14 +38,14 @@ Read in CP77 Log Collector, README.md, "What it collects" and "What the host get
 | The game folder | every `*.log` and `*.log.N` at any depth, and `*.txt` in folders named `logs` |
 | `REDEngine/ReportQueue` in the game's `%LOCALAPPDATA%` | crash reports' text files |
 | `CD Projekt Red/Cyberpunk 2077` in the game's `%LOCALAPPDATA%` | `*.log` and `*.json`, such as CrashInfo and UserSettings |
-| The app's own data folder | the app's own log |
+| The app's data folder | the app's own log; **changed:** CP77 Log Collector keeps it next to its program |
 | Extra paths | what the host lists, relative to the game folder |
 
 On Linux the game runs in Proton, and its `%LOCALAPPDATA%` is inside the prefix Proton keeps for the game, `steamapps/compatdata/1091500/pfx/`.
 
 - **Changed:** extra paths are one setting of the host's, sent to every tester, and written relative to the game folder, such as `bin/x64/StreetVendors/*.csv`, so they hold on every PC, Linux included.
 - **Dropped:** each player's own options for history, crash dumps, and extra paths.
-  Crash dumps (`.dmp`) are never sent, since they run to hundreds of megabytes and Claude can't read a minidump without tools.
+  Crash dumps (`.dmp`) are never sent, since Claude can't read a minidump without tools, and they're large (unverified: we haven't measured one of the game's).
 
 ### How they're sent
 

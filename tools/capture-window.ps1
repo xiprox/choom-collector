@@ -1,7 +1,11 @@
 # Starts the app, saves a picture of its window, and closes it, without taking the focus or
 # moving the mouse, so it can run while someone uses the PC.
 #
-#   tools/capture-window.ps1 -Out shot.png [-Exe target/debug/cyberpunk-coop-tools.exe] [-Wait 2] [-- app args]
+#   tools/capture-window.ps1 -Out shot.png [-AppArgs "--demo host"] [-Click "298,177"] [-Hover "865,97"]
+#                            [-Exe target/debug/cyberpunk-coop-tools.exe] [-Wait 2]
+#
+# -Click and -Hover take a point in the window's client area, in pixels at its DPI, and act there
+# with posted mouse messages before the picture, so the real mouse never moves.
 #
 # PrintWindow with PW_RENDERFULLCONTENT draws the window even when other windows cover it, and the
 # picture is the client area only, at the window's own DPI.
@@ -10,7 +14,9 @@ param(
     [string]$Exe = "$PSScriptRoot\..\target\debug\cyberpunk-coop-tools.exe",
     [double]$Wait = 2,
     [string]$Title = 'Cyberpunk Co-op Tools',
-    [Parameter(ValueFromRemainingArguments = $true)][string[]]$AppArgs
+    [string]$AppArgs = '',
+    [string]$Click = '',
+    [string]$Hover = ''
 )
 
 Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @"
@@ -69,6 +75,14 @@ public static class CoopCapture {
     }
 
     public static void Close(IntPtr h) { PostMessage(h, 0x0010, IntPtr.Zero, IntPtr.Zero); }
+
+    static IntPtr XY(int x, int y) { return new IntPtr((y << 16) | (x & 0xFFFF)); }
+    public static void Move(IntPtr h, int x, int y) { PostMessage(h, 0x0200, IntPtr.Zero, XY(x, y)); }
+    public static void Click(IntPtr h, int x, int y) {
+        PostMessage(h, 0x0200, IntPtr.Zero, XY(x, y));
+        PostMessage(h, 0x0201, new IntPtr(1), XY(x, y));
+        PostMessage(h, 0x0202, IntPtr.Zero, XY(x, y));
+    }
 }
 "@
 [CoopCapture]::DpiAware()
@@ -84,6 +98,19 @@ try {
     }
     if ($h -eq [IntPtr]::Zero) { throw "No window titled '$Title' appeared within 20s." }
     Start-Sleep -Seconds $Wait
+    if ($Click) {
+        $x, $y = $Click -split ',' | ForEach-Object { [int]$_ }
+        [CoopCapture]::Click($h, $x, $y)
+        Start-Sleep -Milliseconds 400
+    }
+    if ($Hover) {
+        $x, $y = $Hover -split ',' | ForEach-Object { [int]$_ }
+        # A tooltip waits for the pointer to rest, so the pointer arrives, moves once, and rests.
+        [CoopCapture]::Move($h, $x - 2, $y)
+        Start-Sleep -Milliseconds 100
+        [CoopCapture]::Move($h, $x, $y)
+        Start-Sleep -Milliseconds 1200
+    }
     [CoopCapture]::Capture($h, [IO.Path]::GetFullPath($Out))
     [CoopCapture]::Close($h)
     if (-not $p.WaitForExit(5000)) { Stop-Process -Id $p.Id -Confirm:$false }

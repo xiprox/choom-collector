@@ -12,13 +12,15 @@ Exit: CI builds Windows and Linux from `main`, and the program opens an empty wi
 
 ## 2. The window, on made-up data
 
-The theme and every screen of [the interface decisions](../interface/decisions.md), fed by a made-up session that shows the states the frames show, with `--data-dir <folder>` and `--demo`.
+The theme and every screen of [the interface decisions](../interface/decisions.md), fed by `--demo`, a made-up session that shows the states the frames show, and `--data-dir <folder>`.
 
 Exit: pictures from `tools/capture-window.ps1` of setup for joining and for hosting, and of the window as the host and as a tester, show every element the frames in `experiments/areas/interface/frames/` show.
 
+Done on 2026-11-13: the pictures are in `experiments/areas/interface/stage-2/` ([interface log](../interface/log.md#2026-11-13-the-window-draws-every-frame-in-gpui-from-made-up-state)).
+
 ## 3. The relay
 
-`relay/`, forked from fsc-editor's, carrying binary messages, with a deploy guide, and the relay client in `core`.
+`relay/`, forked from fsc-editor's, carrying binary messages, with a deploy guide, and the relay client in `coop-core`.
 
 Exit: under `wrangler dev`, a test's host and two testers exchange messages, the host hears a tester leave, and a host that drops and returns within 30s keeps its testers.
 

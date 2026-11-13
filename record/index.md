@@ -8,7 +8,8 @@ The documents agents write for Cyberpunk Co-op Tools live here, in the kinds [wr
 - [areas/architecture/01-spine.md](areas/architecture/01-spine.md): the crates, what runs on which thread, how state reaches the window, and where the app's files live.
 - [areas/network/01-relay-and-sessions.md](areas/network/01-relay-and-sessions.md): the relay's endpoints and frames, codes, the first messages, and reconnecting.
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
-- [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, and the gpui spike's measurements.
+- [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
+- [areas/build/log.md](areas/build/log.md): what the release pipeline produced, and what's untested in it.
 - [decisions/001-rust-app-of-its-own.md](decisions/001-rust-app-of-its-own.md): Cyberpunk Co-op Tools is a Rust app of its own, for Cyberpunk 2077 only.
 - [decisions/002-gpui-through-gpui-kit.md](decisions/002-gpui-through-gpui-kit.md): The window is drawn with gpui, through Longbridge's gpui-kit.
 - [decisions/003-relay-forked-from-fsc-editor.md](decisions/003-relay-forked-from-fsc-editor.md): Every connection goes through a relay the host runs, forked from fsc-editor's.

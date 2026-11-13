@@ -7,7 +7,7 @@ Decides:     The crates and what each holds, what runs on which thread, how stat
 ```
 
 The app is one program, `cyberpunk-coop-tools`, built from five crates in one Cargo workspace.
-Only the window's crate compiles gpui, so the four that hold the logic build and test in seconds.
+Only the window's crate compiles gpui, so the four that hold the logic build and test without it.
 The logic runs on a tokio runtime of its own, and the window gets a fresh snapshot of the state whenever it changes, and sends back commands.
 
 ## Crates
@@ -29,7 +29,7 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 - `coop-core` starts a tokio runtime on threads of its own, for the relay's WebSocket, timers, and scanning, with blocking file work on tokio's blocking pool.
 - `coop-core` keeps one `State`: the session, its players, the mods, and what's being sent and received.
   When it changes, `coop-core` sends a snapshot of it to the window over an `async-channel`, at most every 100ms, and the window keeps the newest one and redraws.
-  The spike showed a worker thread updating the window this way every second ([interface log](../interface/log.md#2026-11-13-gpui-kit-builds-every-control-the-window-needs-on-windows-and-the-exe-is-about-16-mb)).
+  The spike showed a worker thread updating the window this way every second ([interface log](../interface/log.md#2026-11-13-gpui-kit-builds-every-control-the-window-needs-on-windows-and-the-exe-is-1665-mb)).
 - The window sends commands back over a second channel: share, follow, unfollow, copy the invite, stop, leave, and save settings.
 
 ```text
@@ -63,4 +63,4 @@ The program's manifest is the workspace's root `Cargo.toml`, since release-pleas
 
 `tools/capture-window.ps1` starts the program with any of these, saves a picture of its window, and closes it, without taking the focus, so layout checks run on Windows while someone uses the PC.
 
-Velopack's install, update, and uninstall hooks run before anything else in `main`, as Velopack requires.
+Velopack's install, update, and uninstall hooks run before anything else in `main`, as [Velopack's Rust guide](https://docs.velopack.io/getting-started/rust) requires.

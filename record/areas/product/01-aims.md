@@ -7,7 +7,7 @@ Decides:     The users, the two jobs, what's out of scope, and the relay and lic
 ```
 
 Cyberpunk Co-op Tools serves a mod author testing their mods with friends in a co-op session of Cyberpunk 2077.
-It does two jobs, both without anyone's hands on it once a session runs: the author's mod builds reach every tester's game folder as they're saved, and every tester's logs reach the author's PC, where the author has Claude read them.
+It does two jobs, both without anyone's hands on it once a session runs: the host's mod builds reach every tester's game folder as they're saved, and every tester's logs reach the host's PC, where the host has Claude read them.
 
 ## Who it's for
 
@@ -26,8 +26,8 @@ Anyone in a session can share a mod, but the host sharing their own builds is th
 - **Logs come back.**
   The app finds every log the game and its mods write, sends recent history when a tester joins, and then sends each new line as it's written.
   The host gets one folder per session, with a folder per player inside, and points Claude at it.
-- **It shows what's flowing.**
-  The window answers the host's question at a glance: is everyone on my build, and are their logs reaching me.
+
+Its window shows both jobs at a glance, answering the host's question: is everyone on my build, and are their logs reaching me.
 
 ## What it won't do
 

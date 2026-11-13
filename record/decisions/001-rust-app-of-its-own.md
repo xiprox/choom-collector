@@ -8,7 +8,7 @@ Decided by the user on 2026-11-13.
 
 CP77 Log Collector started as a log collector and grew a mod-sharing feature, and its window grew with it, until the user found it convoluted.
 The user wanted to rethink its design, write it in Rust, open its source, and let anyone self-host the relay it needs.
-The C# app is about 6,000 lines across 11 files, the largest being `src/Mods.cs` at 1,535 lines and `src/MainWindow.cs` at 1,112 (counted on 2026-11-13).
+The C# app is about 6,000 non-blank lines across 11 files, the largest being `src/Mods.cs` at 1,535 and `src/MainWindow.cs` at 1,112 (counted in CP77 Log Collector 1.3.1, 2026-11-13).
 
 ## Options
 
@@ -17,7 +17,7 @@ The C# app is about 6,000 lines across 11 files, the largest being `src/Mods.cs`
 2. **Rewrite it in Rust as a general tool for any game, with games as data files.**
    Other games would cost a profile each, but every feature would pay for a layer it doesn't need while one game uses it.
 3. **Rewrite it in Rust for Cyberpunk 2077 only, with features built on shared parts inside.**
-   Everything about the game is code in one place, and another game's community can fork it.
+   Everything about the game is code in one place, and another game's community can fork it, but every behavior in those 6,000 lines is built and proved again, and a group switches apps all at once.
 
 ## Decision
 

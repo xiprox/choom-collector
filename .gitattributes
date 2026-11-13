@@ -1,0 +1,4 @@
+# Every text file is stored and checked out with LF, so a shell script or a Cargo.lock reads the
+# same on Windows, Linux, and in CI.
+* text=auto eol=lf
+*.png binary

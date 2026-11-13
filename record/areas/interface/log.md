@@ -1,6 +1,22 @@
 # Interface log
 
-## 2026-11-13: gpui-kit builds every control the window needs on Windows, and the exe is about 16 MB
+## 2026-11-13: The window draws every frame in gpui from made-up state
+
+We asked whether gpui and gpui-component can draw the frames in `experiments/areas/interface/frames/` as they are, fed by `coop-core`'s snapshots, before any session is real.
+We expected custom pieces, the delivery tiles and the box that asks before following, to need gpui-component's popover.
+
+`--demo host`, `--demo tester`, `--demo setup-join`, and `--demo setup-host` draw the four frames, and the pictures `tools/capture-window.ps1` took of them are in `experiments/areas/interface/stage-2/` (measured on Windows 11 at 96 dpi, 2026-11-13).
+
+- Every element the frames show is there: the title bar with the session and its buttons, gpui-component's own window buttons, the players and their states, the selected player's details with the logs picked up, the shared mods with checkboxes and tiles, "Your mods" folded, the status bar, and both setup screens.
+- A click on EquipmentEx's checkbox, posted with `-Click`, opens the question under its row with the DLL warning, and a resting pointer, posted with `-Hover`, opens the tiles' tooltip with each follower's state.
+- The question is a plain absolutely placed box, since the rows are all 26px tall; no popover was needed.
+- gpui-component's `TitleBar` keeps the system's window buttons and their hit areas on Windows, so the window moves, minimizes, and closes as any other.
+- Text draws in the system's fonts, Segoe UI and Consolas, because IBM Plex's files aren't in the repository yet.
+- In Rust 2024, a helper that returns `impl IntoElement` borrows every argument it was given, `cx` included, so the window's helpers return `AnyElement`.
+
+The window's layout matches the frames in structure; the pixel pass is stage 9's.
+
+## 2026-11-13: gpui-kit builds every control the window needs on Windows, and the exe is 16.65 MB
 
 We asked whether gpui, with Longbridge's gpui-component, can draw the window the app needs on Windows and Linux, how big the program gets, and how long it takes to build.
 We expected gpui alone to need hand-made controls.
@@ -33,6 +49,7 @@ This led to [decision 002](../../decisions/002-gpui-through-gpui-kit.md), and to
 ## 2026-11-13: Six rounds of mockups settled the window: two panels, one for every role, plain with color that means something
 
 We asked the user what the rewritten app should look like, drawing mockups on a design canvas and changing them on the user's calls.
+We expected the first round's four directions to settle the look, and a round of polish to finish it.
 
 1. **Four directions:** an editor like Zed, a themed Night City HUD, a light calm one, and a keyboard-first console.
    The user picked the editor, and said it still felt like a web app.
@@ -41,7 +58,9 @@ We asked the user what the rewritten app should look like, drawing mockups on a 
 3. **A system first,** with its own type, color, mark, and words; Dual Input's settled look was ruled out for this product (user, 2026-11-13).
 4. **The use case corrected:** the user explained that logs only need to reach the host, who has Claude read them, and that mods are the author's builds going out, so the log viewer and its problems panel went.
    The user kept CP77 Log Collector's list of found mods with one-click sharing over our proposal to pick folders, since it needs no file dialog and merges a mod's folders across places.
-5. **Two panels, plain or middle:** the user found the tabbed attempt felt like a game launcher, wanted Zed's no-nonsense feel without everything blending together, and picked the middle treatment over the plain one.
+5. **Two panels, plain or middle:** the user found the tabbed attempt felt like a game launcher, and wanted Zed's no-nonsense feel without everything blending together.
+   We drew the same two-panel window twice: plain, in neutral grays with color only on problems and a muted blue selection, and middle, which adds a toned-down yellow accent for what's the player's own or happening now, and a tile per follower colored by their state.
+   The user picked middle.
 6. **One window for every role,** "Your mods" folded, setup done once, no per-player send options, extra paths set by the host, and the name from Steam with no field.
 
 What we settled is in [the interface decisions](decisions.md), and the last round's frames are in `experiments/areas/interface/frames/`.
