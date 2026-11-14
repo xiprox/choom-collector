@@ -38,7 +38,7 @@ Everyone connects through a relay the host deploys once on their own Cloudflare 
 
 1. Deploy your relay, as [the relay's README](relay/README.md) shows.
 2. Install the app, as the first two steps of [joining](#join-a-session) show.
-3. In the app's setup, open the Host tab, and paste your relay's address into Relay, without `https://`.
+3. In the app's setup, open the Host tab, and paste your relay's address into Relay.
 4. Click Host.
 5. Send each tester your relay and your code as one line, `<relay>/<code>`, such as `cyberpunk-coop-tools-relay.<your-subdomain>.workers.dev/K7R-M2Q`.
    Clicking the code in the title bar copies it together.

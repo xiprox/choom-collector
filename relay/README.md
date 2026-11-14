@@ -33,7 +33,7 @@ You need a Cloudflare account, which is free, and [Node.js](https://nodejs.org/)
 
    The last lines name its address, such as `https://cyberpunk-coop-tools-relay.<your-subdomain>.workers.dev`.
 
-5. In the app's setup, choose Host, and enter that address without `https://`: `cyberpunk-coop-tools-relay.<your-subdomain>.workers.dev`.
+5. In the app's setup, choose Host, and paste that address into Relay.
 
 To update the relay after pulling a newer version of this repository, run `npx wrangler deploy` again in this folder.
 

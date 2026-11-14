@@ -14,7 +14,7 @@ Everything else it needs, the game, its version, the name, and the system, it fi
 | Setting | What it holds |
 | --- | --- |
 | `role` | `host` or `tester`, or nothing until setup finishes |
-| `relay` | The relay's address as the player entered it, such as `relay.example.net` |
+| `relay` | The relay's address without `https://` or a trailing `/`, such as `relay.example.net`, however the player pasted it |
 | `code` | The code this PC hosts, or the one it joins, without the hyphen |
 | `resume` | The relay's resume token for the code this PC hosts |
 | `logs_folder` | Where the host's logs go; the default is `Choom Collector Logs` in the player's Documents folder |

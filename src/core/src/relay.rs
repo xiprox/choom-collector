@@ -41,6 +41,20 @@ pub fn parse_code(input: &str) -> Option<String> {
     (cleaned.len() == CODE_LENGTH && cleaned.chars().all(|c| CODE_ALPHABET.contains(c))).then_some(cleaned)
 }
 
+/// The relay's address as the app keeps and shows it, in the status bar and the invite: Wrangler
+/// prints `https://relay.example.net`, which is kept as `relay.example.net`, since
+/// [`socket_address`] adds the secure scheme to an address without one. An address that names
+/// another scheme, such as `ws://127.0.0.1:8787` for a relay on this PC, keeps it.
+pub fn tidy_address(input: &str) -> String {
+    let address = input.trim();
+    let lower = address.to_ascii_lowercase();
+    let rest = match ["https://", "wss://"].into_iter().find(|scheme| lower.starts_with(scheme)) {
+        Some(scheme) => &address[scheme.len()..],
+        None => address,
+    };
+    rest.trim_end_matches('/').to_string()
+}
+
 /// The WebSocket address for what a player enters: `relay.example.net` is `wss://relay.example.net`,
 /// and an address that names its scheme, such as `ws://127.0.0.1:8787` for a relay on this PC,
 /// keeps it.
@@ -310,6 +324,16 @@ mod tests {
         assert_eq!(parse_code("K7R-M2"), None);
         // O and 0 aren't in the alphabet, since they're misread for each other.
         assert_eq!(parse_code("K7R-M20"), None);
+    }
+
+    #[test]
+    fn an_address_as_wrangler_prints_it_is_kept_without_its_scheme() {
+        assert_eq!(tidy_address(" https://relay.example.net/ "), "relay.example.net");
+        assert_eq!(tidy_address("WSS://relay.example.net"), "relay.example.net");
+        assert_eq!(tidy_address("relay.example.net"), "relay.example.net");
+        assert_eq!(tidy_address("ws://127.0.0.1:8787/"), "ws://127.0.0.1:8787");
+        assert_eq!(tidy_address("http://127.0.0.1:8787"), "http://127.0.0.1:8787");
+        assert_eq!(tidy_address("https://"), "");
     }
 
     #[test]

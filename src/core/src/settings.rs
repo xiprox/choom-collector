@@ -14,7 +14,7 @@ use crate::state::{Role, SettingsAnswers};
 pub struct Settings {
     /// `None` until the first run's setup finishes.
     pub role: Option<SavedRole>,
-    /// The relay's address as the player entered it, such as `relay.example.net`.
+    /// The relay's address, without `https://` or a trailing `/`, such as `relay.example.net`.
     pub relay: String,
     /// The code this PC hosts, or the one it joins.
     pub code: String,
@@ -102,7 +102,7 @@ impl Settings {
     /// must start again with them. A blank relay or a code that doesn't read as one keeps the old.
     pub fn take_answers(&mut self, answers: SettingsAnswers) -> bool {
         let code = relay::parse_code(&answers.code).unwrap_or_else(|| self.code.clone());
-        let relay = answers.relay.trim().to_string();
+        let relay = relay::tidy_address(&answers.relay);
         let restart = (!relay.is_empty() && relay != self.relay) || code != self.code;
         if restart {
             // The relay's proof of hosting belongs to the old code.
@@ -127,6 +127,8 @@ impl Settings {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Settings::default(),
             Err(e) => return Err(e).with_context(|| format!("couldn't read {}", file.display())),
         };
+        // A file can hold the address as it was typed, `https://relay.example.net/`.
+        settings.relay = relay::tidy_address(&settings.relay);
         if settings.install_id.is_empty() {
             settings.install_id = (0..16).map(|_| format!("{:02x}", rand::random::<u8>())).collect();
             settings.save(data_dir)?;
@@ -207,6 +209,10 @@ mod tests {
         assert_eq!(s.extra_paths, vec!["bin/x64/a.csv"]);
         assert_eq!(s.never_share, vec!["*.psd"]);
         assert_eq!(s.logs_folder, Some(PathBuf::from("logs")));
+
+        // The same relay as Wrangler prints it is the same relay.
+        assert!(!s.take_answers(answers("https://relay.example.net/", "K7RM2Q")));
+        assert_eq!((s.relay.as_str(), s.resume.as_str()), ("relay.example.net", "token"));
 
         // A code that doesn't read as one keeps the old code, and a blank relay the old relay.
         assert!(!s.take_answers(answers("", "nope")));

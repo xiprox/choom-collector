@@ -316,7 +316,7 @@ impl Core {
             Some((relay, code)) => (relay.trim().to_string(), code.trim().to_string()),
             None => (String::new(), answers.invite.trim().to_string()),
         };
-        let relay = if answers.relay.trim().is_empty() { invite_relay } else { answers.relay.trim().to_string() };
+        let relay = relay::tidy_address(if answers.relay.trim().is_empty() { &invite_relay } else { &answers.relay });
         if relay.is_empty() {
             return Err("Enter the relay's address, such as relay.example.net".into());
         }
