@@ -12,8 +12,8 @@ Everyone runs the same app, on Windows or Linux, and once it's set up nobody has
 ![The host's window: the session's players on the left, and on the right the mods shared in the session, with a tile per follower showing whether their copy is up to date](.github/readme/host-window.webp)
 
 <p>
-  <img src=".github/readme/ask-about-a-crash.webp" width="49%" align="top" alt="Asked why a friend's game crashed, the AI traces it to a known game bug in the session's logs">
-  <img src=".github/readme/ask-about-a-screenshot.webp" width="49%" align="top" alt="Asked about a friend's screenshot from the game, the AI checks their logs before answering">
+  <img src=".github/readme/ask-about-a-crash.webp" width="55.6%" align="top" alt="Asked why a friend's game crashed, the AI traces it to a known game bug in the session's logs">
+  <img src=".github/readme/ask-about-a-screenshot.webp" width="42.4%" align="top" alt="Asked about a friend's screenshot from the game, the AI checks their logs before answering">
 </p>
 
 ## Join a session
