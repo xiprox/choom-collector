@@ -58,26 +58,8 @@ On Linux the game runs in Proton, and its `%LOCALAPPDATA%` is inside the prefix 
 
 ### What the host gets
 
-The host's folder holds one folder per session, named by date and code, with a folder per player inside it:
+The host's folder holds one folder per session, named by date and code, with a folder per player inside it, as [collecting logs](../logs/01-collecting.md#the-hosts-folder) lays out.
 
-```text
-<logs folder>/<YYYY-MM-DD> <code>/
-  _status.txt          who is connected, files, data, last activity, every 5s
-  _collector.log       everything that happened, every player
-  <player>/
-    game/...           the same layout as their game folder
-    crash-reports/...
-    localappdata/...
-    extra/...
-    app/app.log        this app's own log on their PC
-    _peer.txt          their game version, system, and connection state
-    _events.log        new files, rotations, reconnects
-    _manifest.tsv      which part of which source file each copy holds, and where it is here
-    _history/<time>/   older copies a rotation or a rewrite replaced
-    _long/             copies whose full path would be too long for Windows
-```
-
-- Copies are plain files, readable while they're being written.
 - **Changed:** the folder is named by session, so one folder holds one test run (CP77 Log Collector writes into one folder the host picks).
 - **Dropped:** the player's game folder in `_peer.txt`, since its path can hold their user name, and the host's analysis hasn't needed it.
 - TBD: whether the session folder gets an index written for Claude, naming who played, on which game version and build, and when anyone crashed; stage 5 left it open, for the first session with friends to show whether Claude needs one.
@@ -147,6 +129,7 @@ A mod is a top-level folder in one of the game's mod places, and folders with th
 
 - The app updates itself from the project's GitHub releases with Velopack, delta packages included ([decision 004](../../decisions/004-releases-with-release-please-and-velopack.md)).
 - Windows 10 and 11 on x64, and Linux on x64.
-  CI builds Linux and runs every test on it, but no release has run on a real Linux desktop or a Steam Deck, since nobody in the user's group plays on Linux (user, 2026-11-13).
+  CI builds Linux and runs every test on it, and the user ran the app on a Linux desktop on 2026-11-13, where it worked without trouble (user, 2026-11-14); which version and distribution, and whether it joined a session, aren't recorded.
+  We haven't run a release on a Steam Deck.
 - On Linux the app finds the game in every Steam library, for native, Flatpak, and Snap Steam, and in Heroic and Lutris installs (read in CP77 Log Collector, README.md, "Linux").
 - TBD: whether v1 keeps CP77 Log Collector's mode without a window (`--nogui`), which it offers for Linux PCs missing X11 libraries; the user hasn't said.

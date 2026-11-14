@@ -41,4 +41,4 @@ Its window shows both jobs at a glance, answering the host's question: is everyo
 ## Commitments
 
 - Every connection goes through a relay the host deploys on their own Cloudflare account, so nobody pays for anyone else's sessions ([decision 003](../../decisions/003-relay-forked-from-fsc-editor.md)).
-- The source is open, under a license the user hasn't picked yet (TBD).
+- The source is open, under the MIT license ([build log](../build/log.md#2026-11-13-the-repository-went-public-under-mit-and-its-releases-read-without-a-token)).

@@ -15,6 +15,7 @@ The documents agents write for Choom Collector live here, in the kinds [writing.
 - [areas/mods/log.md](areas/mods/log.md): what coop-mods' tests and a real session found, and what it changes from CP77 Log Collector.
 - [areas/interface/decisions.md](areas/interface/decisions.md): what the window's design has settled, with the values it draws with.
 - [areas/interface/log.md](areas/interface/log.md): the mockup rounds that settled the design, the gpui spike's measurements, and the window drawn in gpui.
+- [areas/build/releasing.md](areas/build/releasing.md): how a version is chosen, how to make a release, and how to try the packaging without one.
 - [areas/build/log.md](areas/build/log.md): what the release pipeline produced, what's untested in it, and the repository going public.
 - [decisions/001-rust-app-of-its-own.md](decisions/001-rust-app-of-its-own.md): Choom Collector is a Rust app of its own, for Cyberpunk 2077 only.
 - [decisions/002-gpui-through-gpui-kit.md](decisions/002-gpui-through-gpui-kit.md): The window is drawn with gpui, through Longbridge's gpui-kit.
