@@ -209,9 +209,9 @@ fn setup(role: Role) -> Setup {
         logs_folder: PathBuf::from(r"D:\Cyberpunk Logs"),
         game: Some(GameInstall {
             folder: PathBuf::from(r"D:\SteamLibrary\steamapps\common\Cyberpunk 2077"),
-            version: Some(if role == Role::Tester { "2.3" } else { "2.31" }.into()),
+            version: Some("2.5".into()),
         }),
-        steam_name: if role == Role::Tester { "tetsu" } else { "kade" }.into(),
+        steam_name: if role == Role::Tester { "Bleack" } else { "xip" }.into(),
         error: None,
     }
 }
@@ -242,10 +242,10 @@ fn session(role: Role) -> Session {
         sources: None,
     };
     let mut players = vec![
-        player(1, "kade", host, true, "2.31", "Windows 11", 75, 0, PlayerState::Fine),
-        player(2, "rin", false, false, "2.31", "Windows 11", 71, 12_400_000, PlayerState::Fetching { done: 4, total: 12 }),
-        player(3, "mira", false, false, "2.31", "Windows 10", 60, 3_100_000, PlayerState::Reconnecting),
-        player(4, "tetsu", !host, false, "2.3", "SteamOS, Steam Deck", 2, 4_100_000, PlayerState::NeedsRestart),
+        player(1, "xip", host, true, "2.5", "Windows 11", 75, 0, PlayerState::Fine),
+        player(2, "bossun", false, false, "2.5", "Windows 10", 71, 12_400_000, PlayerState::Fetching { done: 4, total: 12 }),
+        player(3, "Ecto", false, false, "2.5", "Windows 11", 60, 3_100_000, PlayerState::Reconnecting),
+        player(4, "Bleack", !host, false, "2.5", "CachyOS", 2, 4_100_000, PlayerState::NeedsRestart),
     ];
     if host {
         players[1].sources = sources(182, 3, 3, 0);
@@ -263,40 +263,40 @@ fn session(role: Role) -> Session {
     let shared = if host {
         vec![
             SharedMod {
-                key: "street vendors+".into(),
-                name: "Street Vendors+".into(),
-                sharer: "kade".into(),
+                key: "vehiclecustomizer".into(),
+                name: "VehicleCustomizer".into(),
+                sharer: "xip".into(),
                 mine: true,
                 follow: Follow::No,
                 has_dll: false,
                 status: ModStatus::Sharing,
                 changed: Some(now - Ago::minutes(2)),
                 followers: vec![
-                    tile("rin", Delivery::Fetching { done: 4, total: 12 }),
-                    tile("mira", Delivery::Paused),
-                    tile("tetsu", Delivery::NeedsRestart),
+                    tile("Bleack", Delivery::NeedsRestart),
+                    tile("bossun", Delivery::Fetching { done: 4, total: 12 }),
+                    tile("Ecto", Delivery::Paused),
                 ],
             },
             SharedMod {
-                key: "neon signs overhaul".into(),
-                name: "Neon Signs Overhaul".into(),
-                sharer: "kade".into(),
+                key: "nightcoopvoice".into(),
+                name: "NightCoopVoice".into(),
+                sharer: "xip".into(),
                 mine: true,
                 follow: Follow::No,
-                has_dll: false,
+                has_dll: true,
                 status: ModStatus::Sharing,
                 changed: Some(now - Ago::minutes(45)),
-                followers: ["rin", "mira", "tetsu"].iter().map(|n| tile(n, Delivery::UpToDate)).collect(),
+                followers: ["Bleack", "bossun", "Ecto"].iter().map(|n| tile(n, Delivery::UpToDate)).collect(),
             },
-            others_mod("equipmentex", "EquipmentEx", "rin", true, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(59)),
-            others_mod("better apartments", "Better Apartments", "mira", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
+            others_mod("nightcooptweaks", "NightCoopTweaks", "bossun", false, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(59)),
+            others_mod("passengerradio", "passengerradio", "Ecto", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
         ]
     } else {
         vec![
-            others_mod("street vendors+", "Street Vendors+", "kade", false, Follow::Yes, ModStatus::NeedsRestart, now - Ago::minutes(2)),
-            others_mod("neon signs overhaul", "Neon Signs Overhaul", "kade", false, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(45)),
-            others_mod("equipmentex", "EquipmentEx", "rin", true, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(59)),
-            others_mod("better apartments", "Better Apartments", "mira", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
+            others_mod("vehiclecustomizer", "VehicleCustomizer", "xip", false, Follow::Yes, ModStatus::NeedsRestart, now - Ago::minutes(2)),
+            others_mod("nightcoopvoice", "NightCoopVoice", "xip", true, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(45)),
+            others_mod("nightcooptweaks", "NightCoopTweaks", "bossun", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(59)),
+            others_mod("passengerradio", "passengerradio", "Ecto", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
         ]
     };
 
@@ -308,13 +308,59 @@ fn session(role: Role) -> Session {
         shared,
         loose_file: loose.map(Into::into),
     };
+    // The host's real game folder as coop-mods listed it on 2026-11-14, so the README's picture of
+    // the demo shows the group's own session.
     let my_mods = vec![
-        my_mod("Street Vendors+", &[Place::Archive, Place::Redscript, Place::TweakXl], 1_200_000, host, None),
-        my_mod("Neon Signs Overhaul", &[Place::Archive], 212_000_000, host, None),
-        my_mod("ArchiveXL", &[Place::Red4ext, Place::Archive], 3_800_000, false, None),
-        my_mod("Codeware", &[Place::Red4ext], 2_100_000, false, None),
-        my_mod("Photo Mode Unlocker", &[Place::Cet], 96_000, false, None),
-        my_mod("Virtual Atelier", &[Place::Redscript], 640_000, false, Some("archive/pc/mod/VirtualAtelier.archive")),
+        my_mod("ArchiveXL", &[Place::Red4ext], 3_569_547, false, None),
+        my_mod("audioware", &[Place::Red4ext, Place::Redscript], 3_839_303, false, None),
+        my_mod("BlurBegone", &[Place::Red4ext], 5_318_843, false, Some("archive/pc/mod/###-BlurBegone-OpticalCamo.archive")),
+        my_mod("BrowserExtension", &[Place::Redscript], 27_988, false, None),
+        my_mod("CET Window Manager", &[Place::Red4ext], 97_280, false, None),
+        my_mod("Codeware", &[Place::Red4ext], 32_944_502, false, None),
+        my_mod("cornmilf", &[Place::TweakXl], 12_024, false, Some("archive/pc/mod/CORNMILF_Rolls_Royce_Wraith.archive")),
+        my_mod("CrystalCoatContinuity", &[Place::Redscript], 6_531, false, None),
+        my_mod("debug_draw", &[Place::Red4ext], 1_144_016, false, Some("archive/pc/mod/debug_draw_shaders.archive")),
+        my_mod("delamain_combat_mode", &[Place::Redscript, Place::TweakXl], 6_362, false, Some("archive/pc/mod/delamain_combat_mode.archive")),
+        my_mod("EnemyMultiplierRS", &[Place::Redscript], 35_491, false, None),
+        my_mod("EnhancedVehicleCamera", &[Place::Cet], 67_923, false, None),
+        my_mod("EquipmentEx", &[Place::Redscript], 259_870, false, Some("archive/pc/mod/EquipmentEx.archive")),
+        my_mod("ExpandedDualWielding", &[Place::Cet, Place::Redscript], 242_152, false, None),
+        my_mod("ForbiddenVehicleMovementNoMore", &[Place::Redscript], 1_168, false, None),
+        my_mod("GRO Hardcore22 Compat v3.0 (PL)", &[Place::TweakXl], 351_094, false, None),
+        my_mod("Headset", &[Place::Cet, Place::Red4ext, Place::Archive], 577_966, false, None),
+        my_mod("input_loader", &[Place::Red4ext], 1_629_219, false, None),
+        my_mod("kart", &[Place::TweakXl], 11_898, false, Some("archive/pc/mod/kart.archive")),
+        my_mod("LUTSwitcher", &[Place::Cet, Place::Redscript, Place::TweakXl], 230_253, false, Some("archive/pc/mod/LUTSwitcher-Addon-Nova.archive")),
+        my_mod("Midas – Dual Wield Penalty", &[Place::Cet], 276, false, None),
+        my_mod("mod_settings", &[Place::Red4ext], 1_244_050, false, None),
+        my_mod("nativeSettings", &[Place::Cet], 80_214, false, None),
+        my_mod("NightCoop", &[Place::Red4ext], 1_684_282_729, false, None),
+        my_mod("NightCoopFlight", &[Place::Redscript], 34_020, false, None),
+        my_mod("NightCoopPhotoHairClock", &[Place::Cet], 0, false, None),
+        my_mod("NightCoopTweaks", &[Place::Cet], 141_709, false, None),
+        my_mod("NightCoopVoice", &[Place::Cet, Place::Red4ext], 1_451_716, host, None),
+        my_mod("nocarryweight", &[Place::TweakXl], 420, false, None),
+        my_mod("Okrasha", &[Place::TweakXl], 24_757, false, Some("archive/pc/mod/Okrasha_Mini_Cooper_S_1965.archive")),
+        my_mod("passengerradio", &[Place::InputLoader], 376, false, None),
+        my_mod("Ping", &[Place::Redscript], 112_424, false, None),
+        my_mod("protoss", &[Place::TweakXl], 0, false, None),
+        my_mod("raem", &[Place::TweakXl], 43_960, false, None),
+        my_mod("RedData", &[Place::Red4ext, Place::Redscript], 670_218, false, None),
+        my_mod("ReFRACT", &[Place::Red4ext], 10_738_887, false, None),
+        my_mod("Sleeves", &[Place::Redscript], 62_180, false, Some("archive/pc/mod/Sleeves.archive")),
+        my_mod("Sleeves 3309 3.3.3 2026-10-27T06-22Z FKtYKrr2a (V2077)", &[Place::Redscript], 0, false, None),
+        my_mod("TobiiHeadTracking", &[Place::Cet, Place::Red4ext], 226_132, false, None),
+        my_mod("TobiiStackTest", &[Place::Cet], 0, false, None),
+        my_mod("TweakXL", &[Place::Red4ext], 2_125_382, false, None),
+        my_mod("UltraPlus", &[Place::Cet], 1_573, false, None),
+        my_mod("VehicleCustomizer", &[Place::Redscript, Place::TweakXl, Place::Archive], 189_727_140, host, None),
+        my_mod("VehicleCustomizerDev", &[Place::Cet, Place::Redscript, Place::TweakXl, Place::Archive], 1_334_492, false, None),
+        my_mod("VehicleCustomizerStand", &[Place::Cet], 2_719, false, None),
+        my_mod("VirtualCarDealer", &[Place::Redscript], 115_729, false, Some("archive/pc/mod/VirtualCarDealer.archive")),
+        my_mod("VisualHolster", &[Place::Cet], 53_637, false, None),
+        my_mod("VMF", &[Place::Redscript], 718, false, None),
+        my_mod("Window Manager", &[Place::Cet], 69_906, false, None),
+        my_mod("WindowUtils", &[Place::Cet, Place::Red4ext], 1_032_900, false, None),
     ];
 
     Session {
@@ -322,14 +368,14 @@ fn session(role: Role) -> Session {
         code: "K7RM2Q".into(),
         relay: "relay.example.net".into(),
         link: Link::Connected { latency_ms: 38 },
-        host_name: "kade".into(),
+        host_name: "xip".into(),
         players,
         shared,
         my_mods,
         logs: if host {
             LogsLine::Host { folder: PathBuf::from(r"D:\Cyberpunk Logs\2026-11-13 K7R-M2Q") }
         } else {
-            LogsLine::Tester { host: "kade".into(), sending: Sending::CatchingUp { done: 38, total: 96 } }
+            LogsLine::Tester { host: "xip".into(), sending: Sending::CatchingUp { done: 38, total: 96 } }
         },
         problem: None,
     }
