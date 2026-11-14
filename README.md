@@ -49,8 +49,8 @@ Folders with the same name in different places are treated as one mod, so a mod 
   It shows under "Shared in this session" for everyone.
 - **Following:** tick a mod under "Shared in this session".
   When the sharer saves a file in the mod, your copy is replaced within seconds, and a file the sharer deletes is deleted from yours.
-- **Updating while the game runs:** on Windows, a file the game holds is replaced once the game lets go of it, and the status says when you need to restart the game to load the new build.
-- **Checking followers:** each follower gets a tile on the mod's row, which shows whether their copy is up to date, fetching, or waiting for a game restart.
+- **Updating while the game runs:** on Windows, a file the game holds is replaced once the game lets go of it, and the status says when you need to restart the game to load the new build, or, for a CET mod, choose "Reload all mods" in CET's overlay.
+- **Checking followers:** each follower gets a tile on the mod's row, which shows whether their copy is up to date, fetching, or waiting for a game restart or a CET reload.
 - **Unfollowing:** untick the mod, and the app asks whether to keep your copy or delete it.
 
 A followed folder is a copy of the sharer's, so an edit you make in it is undone within seconds.

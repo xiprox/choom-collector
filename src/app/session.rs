@@ -191,7 +191,7 @@ impl AppView {
             let player_tile = match p.state {
                 PlayerState::Fine => tile(cx, &p.name, DONE, ON_ACCENT),
                 PlayerState::Fetching { done, total } => progress_tile(cx, &p.name, done, total),
-                PlayerState::NeedsRestart | PlayerState::Held => tile(cx, &p.name, WARNING, ON_ACCENT),
+                PlayerState::NeedsRestart | PlayerState::NeedsReload | PlayerState::Held => tile(cx, &p.name, WARNING, ON_ACCENT),
                 PlayerState::Reconnecting => tile(cx, &p.name, CONTROL, MUTED),
             };
             let row = h_flex()
@@ -387,7 +387,7 @@ impl AppView {
                             match f.delivery {
                                 Delivery::UpToDate => tile(cx, &f.name, DONE, ON_ACCENT),
                                 Delivery::Fetching { done, total } => progress_tile(cx, &f.name, done, total),
-                                Delivery::NeedsRestart | Delivery::Held => tile(cx, &f.name, WARNING, ON_ACCENT),
+                                Delivery::NeedsRestart | Delivery::NeedsReload | Delivery::Held => tile(cx, &f.name, WARNING, ON_ACCENT),
                                 Delivery::Paused => tile(cx, &f.name, CONTROL, MUTED),
                             }
                         }))
@@ -399,6 +399,7 @@ impl AppView {
                                         Delivery::UpToDate => ("Up to date".to_string(), TEXT),
                                         Delivery::Fetching { done, total } => (format!("Fetching {done} of {total} files"), PROGRESS),
                                         Delivery::NeedsRestart => ("Has it, needs a game restart".to_string(), WARNING),
+                                        Delivery::NeedsReload => ("Has it, needs a CET reload".to_string(), WARNING),
                                         Delivery::Held => ("Has it, waiting for a program to let go of the old files".to_string(), WARNING),
                                         Delivery::Paused => ("Paused while reconnecting".to_string(), MUTED),
                                     };
@@ -415,6 +416,7 @@ impl AppView {
                 ModStatus::UpToDate => ("Up to date".to_string(), MUTED),
                 ModStatus::Fetching { done, total } => (format!("Fetching {done} of {total} files"), PROGRESS),
                 ModStatus::NeedsRestart => ("Restart the game to load it".to_string(), WARNING),
+                ModStatus::NeedsReload => ("Reload all mods in CET to load it".to_string(), WARNING),
                 ModStatus::Held => ("Waiting for a program to let go of the old files".to_string(), WARNING),
                 ModStatus::NotOnYourPc => ("Not on your PC".to_string(), MUTED),
                 ModStatus::AddedFolder => ("Added a folder, tick to take it".to_string(), WARNING),
@@ -670,6 +672,7 @@ fn player_state(s: &Session, p: &Player, host_version: Option<&str>) -> (Option<
         PlayerState::Reconnecting => (Some("Reconnecting".into()), WARNING),
         PlayerState::NeedsRestart if sees && off_version => (Some(format!("Game {}, needs a restart", p.game_version)), WARNING),
         PlayerState::NeedsRestart if sees => (Some("Needs a restart".into()), WARNING),
+        PlayerState::NeedsReload if sees => (Some("Needs a CET reload".into()), WARNING),
         PlayerState::Held if sees => (Some("Waiting for a program".into()), WARNING),
         PlayerState::Fetching { done, total } if sees => (Some(format!("Fetching {done} of {total}")), PROGRESS),
         _ if p.is_host && p.is_me => (Some("You, hosting".into()), MUTED),

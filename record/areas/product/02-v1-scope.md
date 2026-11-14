@@ -101,7 +101,8 @@ A mod is a top-level folder in one of the game's mod places, and folders with th
 - Unfollowing asks whether to delete the copy too.
   Deleting removes all its folders; a folder that's a link to one elsewhere loses only the link.
   On Windows the game may hold some files, so the app offers to try again once the game is closed.
-- **Added:** each follower reports their state for each mod they follow, and the sharer sees it: up to date, fetching n of m files, needs a game restart, or paused while reconnecting.
+- **Added:** each follower reports their state for each mod they follow, and the sharer sees it: up to date, fetching n of m files, needs a game restart, needs a CET reload, or paused while reconnecting.
+- **Added:** a change that lands in a CET mod while the game runs needs "Reload all mods" in CET's overlay rather than a game restart, and the follower sees the reload in CET's log, as [sharing mods](../mods/01-sharing.md#cet-reloads) describes.
 
 ### What stays out
 

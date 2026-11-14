@@ -1,5 +1,21 @@
 # Mods log
 
+## 2026-11-14: CET logs "LuaVM: Reloaded all mods!" after every reload, so a changed CET mod needs a reload, not a game restart
+
+We asked whether a follower can tell when CET has loaded its mods again, since a change to a CET mod loads with "Reload all mods" in CET's overlay, while the app told the follower to restart the game (user, 2026-11-14).
+We expected CET to say so in its own logs in `bin/x64/plugins/cyber_engine_tweaks/`, if anywhere.
+
+We searched the CET logs of five players' Windows PCs: the development machine's game folder, which runs CET v1.38.1, and the copies Choom Collector and CP77 Log Collector collected from the others between 2026-10-29 and 2026-11-14 (measured on Windows 11, 2026-11-14).
+
+- Every PC's `scripting.log` has the line, 147 times in all, as `[2026-11-13 21:58:22 UTC+01:00] [14180] LuaVM: Reloaded all mods!`.
+- It comes after a `Mod <name> loaded!` line for each mod, so it marks a finished reload.
+- CET doesn't empty `scripting.log` when the game starts: one player's covers 2026-10-29 to 2026-11-13, across several launches.
+  CET rotates it to `scripting.1.log`, which was 5,242,768 bytes on the development machine.
+- The development machine's `scripting.log` has a NUL byte at offset 148,830, so the log is read as bytes, not text.
+
+This led to a reload mark for CET folders that the line clears, and to protocol 2, since the follower reports the new state to its sharer.
+It affects [sharing mods](01-sharing.md#cet-reloads), [the v1 scope](../product/02-v1-scope.md#sharing-and-following), and the README.
+
 ## 2026-11-13: In a real session, a saved file reached the follower in 2.05s, and a held one landed 0.34s after it was let go
 
 We asked whether stage 6's exit holds with the core carrying `coop-mods` over the relay: a saved file in the follower's copy within 5s, a held file replaced once it's let go, and each follower's state in the sharer's window.

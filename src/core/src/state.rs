@@ -143,6 +143,8 @@ pub enum PlayerState {
     NeedsRestart,
     /// Mods fetched, waiting for a program other than the game to let go of the old files.
     Held,
+    /// A CET mod changed while the game ran, which "Reload all mods" in CET's overlay loads.
+    NeedsReload,
     Reconnecting,
 }
 
@@ -194,6 +196,8 @@ pub enum ModStatus {
     UpToDate,
     Fetching { done: u32, total: u32 },
     NeedsRestart,
+    /// A CET folder of it changed while the game ran, which "Reload all mods" in CET's overlay loads.
+    NeedsReload,
     /// The new files are here, waiting for a program other than the game to let go of the old ones.
     Held,
     NotOnYourPc,
@@ -224,6 +228,8 @@ pub enum Delivery {
     UpToDate,
     Fetching { done: u32, total: u32 },
     NeedsRestart,
+    /// Has the change to a CET folder, which "Reload all mods" in CET's overlay loads.
+    NeedsReload,
     /// Has the change, waiting for a program other than the game to let go of the old files.
     Held,
     Paused,

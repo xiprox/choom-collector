@@ -193,6 +193,63 @@ fn each_followers_delivery_reaches_the_sharer() {
     assert!(net.run_until(4.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::UpToDate)));
 }
 
+const CET_LOG: &str = "bin/x64/plugins/cyber_engine_tweaks/scripting.log";
+const HOST_LUA: &str = "bin/x64/plugins/cyber_engine_tweaks/mods/HostMod/init.lua";
+
+#[test]
+fn a_cet_mod_that_changes_while_the_game_runs_needs_a_cet_reload_until_cet_logs_one() {
+    let mut net = Net::new(&["xip", "bossun", "mira"]);
+    net.write(HOST, HOST_LUA, b"a");
+    net.write(HOST, "r6/scripts/HostMod/a.reds", b"a");
+    net.pm(HOST).share("hostmod", true);
+    assert!(net.run_until(5.0, |n| n.row(BOSSUN, "hostmod").is_some() && n.row(MIRA, "hostmod").is_some()));
+    net.pm(BOSSUN).follow("hostmod");
+    net.pm(MIRA).follow("hostmod");
+    assert!(net.run_until(5.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::UpToDate)));
+
+    // mira's game runs, and her CET log has a reload from before the app first saw it.
+    let old = "[2026-11-13 21:58:22 UTC+01:00] [14180] LuaVM: Reloaded all mods!\n".to_string();
+    net.write(MIRA, CET_LOG, &old);
+    net.pcs[MIRA].game_running.store(true, Ordering::SeqCst);
+    net.run(2.5);
+
+    // A change to the mod's CET folder alone needs a reload of CET's mods, not a restart.
+    net.write(HOST, HOST_LUA, b"a2");
+    assert!(net.run_until(5.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::NeedsReload)));
+    assert_eq!(net.row(MIRA, "hostmod").unwrap().status, ModStatus::NeedsReload);
+    assert_eq!(net.p(MIRA).doing(), Doing::NeedsReload);
+
+    // A line CET is still writing doesn't count yet.
+    let partial = format!("{old}[2026-11-13 22:01:02 UTC+01:00] [14180] Mod HostMod loaded!\n[2026-11-13 22:01:02 UTC+01:00] [14180] LuaVM: Reloaded all");
+    net.write(MIRA, CET_LOG, &partial);
+    net.run(2.5);
+    assert_eq!(net.row(MIRA, "hostmod").unwrap().status, ModStatus::NeedsReload);
+
+    // CET finishes the line, and the reload clears the mark.
+    let reloaded = format!("{partial} mods!\n");
+    net.write(MIRA, CET_LOG, &reloaded);
+    assert!(net.run_until(4.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::UpToDate)));
+    assert_eq!(net.p(MIRA).doing(), Doing::Nothing);
+
+    // A change to the redscript folder too needs a restart, which a reload doesn't clear.
+    net.write(HOST, HOST_LUA, b"a3");
+    net.write(HOST, "r6/scripts/HostMod/a.reds", b"a2");
+    assert!(net.run_until(5.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::NeedsRestart)));
+    net.write(MIRA, CET_LOG, format!("{reloaded}[2026-11-13 22:05:40 UTC+01:00] [14180] LuaVM: Reloaded all mods!\n"));
+    net.run(3.0);
+    assert_eq!(net.row(MIRA, "hostmod").unwrap().status, ModStatus::NeedsRestart);
+    net.pcs[MIRA].game_running.store(false, Ordering::SeqCst);
+    assert!(net.run_until(4.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::UpToDate)));
+
+    // CET rotated its log, so the shorter one is read from its start.
+    net.pcs[MIRA].game_running.store(true, Ordering::SeqCst);
+    net.run(2.5);
+    net.write(HOST, HOST_LUA, b"a4");
+    assert!(net.run_until(5.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::NeedsReload)));
+    net.write(MIRA, CET_LOG, "[2026-11-13 22:10:00 UTC+01:00] [14180] LuaVM: Reloaded all mods!\n");
+    assert!(net.run_until(4.0, |n| followers(n, HOST, "hostmod") == both(Delivery::UpToDate, Delivery::UpToDate)));
+}
+
 #[test]
 fn a_slow_follower_shows_fetching_n_of_m_files() {
     let mut net = Net::new(&["xip", "bossun"]);

@@ -1103,6 +1103,7 @@ fn player(info: &PlayerInfo, me: u64, reconnecting: bool) -> Player {
                 Doing::Nothing => PlayerState::Fine,
                 Doing::Fetching { done, total } => PlayerState::Fetching { done, total },
                 Doing::NeedsRestart => PlayerState::NeedsRestart,
+                Doing::NeedsReload => PlayerState::NeedsReload,
                 Doing::Held => PlayerState::Held,
             }
         },
@@ -1167,6 +1168,7 @@ fn delivery(d: coop_mods::Delivery) -> Delivery {
         coop_mods::Delivery::UpToDate => Delivery::UpToDate,
         coop_mods::Delivery::Fetching { done, total } => Delivery::Fetching { done, total },
         coop_mods::Delivery::NeedsRestart => Delivery::NeedsRestart,
+        coop_mods::Delivery::NeedsReload => Delivery::NeedsReload,
         coop_mods::Delivery::Held => Delivery::Held,
         coop_mods::Delivery::Paused => Delivery::Paused,
     }
@@ -1189,6 +1191,7 @@ fn shared_mod(m: coop_mods::SharedMod) -> SharedMod {
             S::UpToDate => ModStatus::UpToDate,
             S::Fetching { done, total } => ModStatus::Fetching { done, total },
             S::NeedsRestart => ModStatus::NeedsRestart,
+            S::NeedsReload => ModStatus::NeedsReload,
             S::Held => ModStatus::Held,
             S::Checking => ModStatus::Checking,
             S::NotOnYourPc => ModStatus::NotOnYourPc,

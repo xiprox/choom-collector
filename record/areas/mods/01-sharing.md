@@ -1,11 +1,13 @@
 # Sharing mods
 
+> The [mods log of 2026-11-14](log.md#2026-11-14-cet-logs-luavm-reloaded-all-mods-after-every-reload-so-a-changed-cet-mod-needs-a-reload-not-a-game-restart) overturns "The game loads mods only when it starts" in [held files and game restarts](#held-files-and-game-restarts) for CET mods, which [CET reloads](#cet-reloads) covers.
+
 ```text
 Purpose:     How coop-mods finds a player's mods, shares them, and keeps each follower's copy the same as the sharer's.
 Depends on:  product/02-v1-scope.md, architecture/01-spine.md, network/01-relay-and-sessions.md
 Decides:     How mods are found and grouped, the messages and who sends each, how a follow is applied, held files
-             and game restarts, unfollowing, the hub's cache, delivery state, flow control, and what
-             survives a restart.
+             and game restarts, CET reloads, unfollowing, the hub's cache, delivery state, flow control, and
+             what survives a restart.
 ```
 
 `coop-mods` holds two objects that the core drives from one thread: a `Player` on every PC, the host's included, and a `Hub` on the host's PC.
@@ -114,7 +116,7 @@ A follow is a folder path, the PC ID of the sharer the player agreed to, and tha
 | `OnYourPc { same }` | not followed, with a copy here; `same` says whether it matches the sharer's |
 | `AddedFolder` | the half tick |
 | `NotShared` | followed, and nobody lists its folders |
-| `Fetching { done, total }`, `NeedsRestart`, `UpToDate` | followed, as [delivery state](#delivery-state) says |
+| `Fetching { done, total }`, `NeedsRestart`, `NeedsReload`, `UpToDate` | followed, as [delivery state](#delivery-state) says |
 | `Checking` | followed, and the copy here is still being hashed |
 
 ### Applying a follow
@@ -156,6 +158,17 @@ The mark clears when the follower sees the game isn't running.
 - We haven't checked that the game's process under Proton shows `Cyberpunk2077.exe` either way; reading `/proc` while it runs settles it.
 - A held file while the game isn't running, held by an editor, say, counts as a file still fetching.
 
+## CET reloads
+
+CET loads its mods again when the player chooses "Reload all mods" in its overlay, and then logs `LuaVM: Reloaded all mods!` to `bin/x64/plugins/cyber_engine_tweaks/scripting.log` ([mods log](log.md#2026-11-14-cet-logs-luavm-reloaded-all-mods-after-every-reload-so-a-changed-cet-mod-needs-a-reload-not-a-game-restart)).
+So a change that lands in a followed CET folder, under `bin/x64/plugins/cyber_engine_tweaks/mods`, while the game runs gives the folder a **CET reload** mark instead of a restart mark, and the follower clears it when that line appears.
+
+- On every game check, every 2s, the follower reads what `scripting.log` gained since the last check, up to its last whole line, and the line clears every CET reload mark.
+- Before it marks a folder, the follower reads the log the same way, so a reload that came before the change doesn't clear the new mark.
+- The follower starts reading at the log's end when the app starts, so earlier reloads count for nothing, and a log shorter than what was read was rotated, so it's read from its start.
+- A held file in a CET folder still counts as needing a restart, and a game that stops clears both marks.
+- A mod with folders in other places shows a restart while any of them needs one, since a restart outranks a reload when a mod's folders are summed.
+
 ## Unfollowing
 
 `unfollow(key, delete_copy)` stops following the row's folders, and drops their files on their way.
@@ -189,10 +202,12 @@ The hub stores each file it pulls in `mod-cache/` in the host's data folder, nam
 | `UpToDate` | the folder matches the sharer's list |
 | `Fetching { done, total }` | files are missing, where `total` counts the files needed since the folder was last up to date |
 | `NeedsRestart` | as [held files and game restarts](#held-files-and-game-restarts) says |
+| `NeedsReload` | as [CET reloads](#cet-reloads) says |
 | `Paused` | the hub sets it for a follower whose link is down |
 
 - A folder still being hashed reports nothing new, and a follower who hasn't reported a folder yet isn't listed for it.
-- `Player::doing` sums `Fetching` across every follow, or else says `NeedsRestart` when any follow needs it, for the player's line in the players list.
+- `Player::doing` sums `Fetching` across every follow, or else says `NeedsRestart` when any follow needs it, or else `NeedsReload`, for the player's line in the players list.
+- `NeedsReload` travels in `Deliveries` and `Doing`, so protocol 2 added it, and a player on protocol 1 is refused.
 
 ## What survives a restart
 
@@ -209,5 +224,6 @@ Hashing reads at most 32 MiB a tick, picking up a large file where the last tick
 - `unfollow` with `delete_copy` deletes and backs up the whole mod before it returns.
 - **Dropped:** following a folder by name whoever shares it, which CP77 Log Collector offers through `--subscribe` (read in CP77 Log Collector, src/Mods.cs, `ModFollow`), since Choom Collector has no such option.
 - A game that closes and starts again within the 2s between checks keeps a stale restart mark until it closes.
+- A reload CET logs just before it rotates `scripting.log` goes unseen, since the rotated part isn't read, and the CET reload mark stays until the next reload or until the game stops.
 - `Fetching` counts files, so a follower fetching one large archive shows 0 of 1 until it lands.
 - A follower can't hash a file the running game holds without letting others read it, and shows the mod as checking until the game closes (unverified: we don't know whether the game holds any file that way).

@@ -110,6 +110,9 @@ pub enum ModStatus {
     UpToDate,
     Fetching { done: u32, total: u32 },
     NeedsRestart,
+    /// Followed, and a CET folder of it changed while the game ran, which "Reload all mods" in
+    /// CET's overlay loads.
+    NeedsReload,
     /// Followed, and the new files are here, but a program other than the game holds the old ones,
     /// so they land once it lets go.
     Held,
@@ -152,18 +155,22 @@ pub enum Delivery {
     Held,
     /// The follower's link to the host is down.
     Paused,
+    /// The follower has the change to a CET folder, and the game they're running loads it once
+    /// they choose "Reload all mods" in CET's overlay.
+    NeedsReload,
 }
 
 impl Delivery {
     /// One state for several folders: paused or fetching if any is, then held, then a restart if any
-    /// needs one.
+    /// needs one, then a CET reload, since a restart loads CET's mods too.
     pub(crate) fn combine<'a>(all: impl IntoIterator<Item = &'a Delivery>) -> Option<Delivery> {
-        let (mut any, mut paused, mut restart, mut held, mut fetching) = (false, false, false, false, None::<(u32, u32)>);
+        let (mut any, mut paused, mut restart, mut reload, mut held, mut fetching) = (false, false, false, false, false, None::<(u32, u32)>);
         for d in all {
             any = true;
             match d {
                 Delivery::Paused => paused = true,
                 Delivery::NeedsRestart => restart = true,
+                Delivery::NeedsReload => reload = true,
                 Delivery::Held => held = true,
                 Delivery::Fetching { done, total } => {
                     let (d0, t0) = fetching.unwrap_or((0, 0));
@@ -178,6 +185,7 @@ impl Delivery {
             (_, _, Some((done, total)), _) => Delivery::Fetching { done, total },
             _ if held => Delivery::Held,
             (_, _, _, true) => Delivery::NeedsRestart,
+            _ if reload => Delivery::NeedsReload,
             _ => Delivery::UpToDate,
         })
     }

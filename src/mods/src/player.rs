@@ -12,6 +12,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use sha2::{Digest, Sha256};
 
 use crate::hashes::{EMPTY, Hash, Hashes, Stamp};
+use crate::game::CetLog;
 use crate::hub::WINDOW;
 use crate::layout::{
     Excluder, TMP_SUFFIX, delete_folder, find_folders, find_loose, folder_of, has_code, local, loose_belongs, name_of, pc_id, remove_empty_folders, remove_tmp_files, usable, walk,
@@ -145,6 +146,10 @@ pub struct Player {
     deliveries_sent: Option<Vec<(String, Delivery)>>,
     /// Followed folders that changed while the game ran, by path in lower case.
     stale_in_game: HashSet<String>,
+    /// Followed CET folders that changed while the game ran, which CET's "Reload all mods" loads,
+    /// by path in lower case.
+    reload_in_cet: HashSet<String>,
+    cet_log: CetLog,
     game_up: bool,
     /// Folders an unfollow couldn't delete all of, by the key it was given, to try again.
     pending_delete: HashMap<String, Vec<String>>,
@@ -205,6 +210,8 @@ impl Player {
             compares: HashMap::new(),
             deliveries_sent: None,
             stale_in_game: HashSet::new(),
+            reload_in_cet: HashSet::new(),
+            cet_log: CetLog::default(),
             game_up: false,
             pending_delete: HashMap::new(),
             share_due: now,
@@ -232,8 +239,12 @@ impl Player {
         if now >= self.game_due {
             self.game_due = now + GAME_CHECK_EVERY;
             self.game_up = (self.game_check)();
+            let reloaded = self.cet_log.reloaded(&game);
             if !self.game_up {
                 self.stale_in_game.clear();
+            }
+            if !self.game_up || reloaded {
+                self.reload_in_cet.clear();
             }
         }
         if !self.tmp_swept && usable(&game) {
@@ -438,13 +449,14 @@ impl Player {
         Err(format!("{count} of {name} couldn't be deleted, most likely because the game has {them} open. Close the game and try again."))
     }
 
-    /// The player's own line in the players list: fetching across every follow, or a restart
-    /// needed, or nothing.
+    /// The player's own line in the players list: fetching across every follow, or a restart or a
+    /// CET reload needed, or nothing.
     pub fn doing(&self) -> Doing {
         let all: Vec<&Delivery> = self.followed_listed().filter_map(|l| self.following.get(&l.path.to_lowercase())?.delivery.as_ref()).collect();
         match Delivery::combine(all) {
             Some(Delivery::Fetching { done, total }) => Doing::Fetching { done, total },
             Some(Delivery::NeedsRestart) => Doing::NeedsRestart,
+            Some(Delivery::NeedsReload) => Doing::NeedsReload,
             Some(Delivery::Held) => Doing::Held,
             _ => Doing::Nothing,
         }
@@ -706,7 +718,13 @@ impl Player {
 
         if changed > 0 {
             log::info!("Mods: {}: {changed} file{} updated or removed", name_of(&l.path), if changed == 1 { "" } else { "s" });
-            if self.game_up {
+            if self.game_up && Place::of(&lower) == Some(Place::Cet) {
+                // A reload CET logged before this change didn't load it.
+                if self.cet_log.reloaded(game) {
+                    self.reload_in_cet.clear();
+                }
+                self.reload_in_cet.insert(lower.clone());
+            } else if self.game_up {
                 self.stale_in_game.insert(lower.clone());
             }
         }
@@ -729,6 +747,8 @@ impl Player {
             state.delivery.clone()
         } else if self.stale_in_game.contains(&lower) {
             Some(Delivery::NeedsRestart)
+        } else if self.reload_in_cet.contains(&lower) {
+            Some(Delivery::NeedsReload)
         } else {
             Some(Delivery::UpToDate)
         };
@@ -983,6 +1003,7 @@ impl Player {
         }
         match Delivery::combine(states.into_iter().flatten()) {
             Some(Delivery::NeedsRestart) => ModStatus::NeedsRestart,
+            Some(Delivery::NeedsReload) => ModStatus::NeedsReload,
             Some(Delivery::Held) => ModStatus::Held,
             Some(Delivery::Paused) => ModStatus::Paused,
             _ => ModStatus::UpToDate,

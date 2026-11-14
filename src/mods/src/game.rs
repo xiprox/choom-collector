@@ -1,8 +1,57 @@
-//! Whether Cyberpunk 2077 is running on this PC. The game loads mods only when it starts, so a
-//! change that lands while it runs needs a restart, and the follower tells its sharer so
-//! (record/areas/mods/01-sharing.md#held-files-and-game-restarts).
+//! Whether Cyberpunk 2077 is running on this PC, and whether CET has reloaded its mods. The game
+//! loads mods when it starts, so a change that lands while it runs needs a restart, except in a
+//! CET folder, which "Reload all mods" in CET's overlay loads; the follower tells its sharer which
+//! (record/areas/mods/01-sharing.md#held-files-and-game-restarts and #cet-reloads).
+
+use std::fs::File;
+use std::io::{Read, Seek, SeekFrom};
+use std::path::Path;
 
 const PROGRAM: &str = "Cyberpunk2077.exe";
+
+/// CET's log of its Lua mods, relative to the game folder.
+const CET_LOG: &str = "bin/x64/plugins/cyber_engine_tweaks/scripting.log";
+/// What CET logs once "Reload all mods" has loaded every mod again, after a `Mod <name> loaded!`
+/// line for each (measured in five players' logs, record/areas/mods/log.md).
+const RELOADED: &[u8] = b"LuaVM: Reloaded all mods!";
+
+/// Follows CET's log for reloads. CET keeps one log across the game's launches and rotates it to
+/// `scripting.1.log` once it's large, so this reads only what the log gained since the last look,
+/// starting from its end.
+#[derive(Default)]
+pub struct CetLog {
+    /// How far the log has been read; `None` until it's first seen.
+    read: Option<u64>,
+}
+
+impl CetLog {
+    /// Whether CET logged a reload since the last call. A log shorter than what was read was
+    /// rotated, so it's read from its start. The log can hold NUL bytes, so it's searched as bytes.
+    pub fn reloaded(&mut self, game: &Path) -> bool {
+        let Ok(mut file) = File::open(game.join(CET_LOG)) else { return false };
+        let len = file.metadata().map_or(0, |m| m.len());
+        let from = match self.read {
+            None => {
+                self.read = Some(len);
+                return false;
+            }
+            Some(read) if read > len => 0,
+            Some(read) => read,
+        };
+        let mut new = Vec::new();
+        if from == len || file.seek(SeekFrom::Start(from)).is_err() || file.take(len - from).read_to_end(&mut new).is_err() {
+            self.read = Some(from);
+            return false;
+        }
+        // A line CET is still writing waits for the next look.
+        let Some(end) = new.iter().rposition(|&b| b == b'\n') else {
+            self.read = Some(from);
+            return false;
+        };
+        self.read = Some(from + end as u64 + 1);
+        new[..end].windows(RELOADED.len()).any(|w| w == RELOADED)
+    }
+}
 
 #[cfg(windows)]
 pub fn running() -> bool {

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Raised whenever a message changes shape, so a host and a tester on different versions find out
 /// from the first message instead of misreading each other.
-pub const PROTOCOL: u32 = 1;
+pub const PROTOCOL: u32 = 2;
 
 /// What a tester sends the host.
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -88,6 +88,8 @@ pub enum Doing {
     NeedsRestart,
     /// Mods fetched, waiting for a program other than the game to let go of the old files.
     Held,
+    /// A CET mod changed while the game ran, which "Reload all mods" in CET's overlay loads.
+    NeedsReload,
 }
 
 pub fn encode<T: Serialize>(message: &T) -> Vec<u8> {
