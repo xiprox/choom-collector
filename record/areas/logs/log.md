@@ -1,5 +1,21 @@
 # Logs log
 
+## 2026-11-14: A tester on Linux sent the game folder's logs and the app's log, but none of the game's own logs their PC found
+
+We asked how the app did on Linux in a real session, since every Proton path in [collecting logs](01-collecting.md) was unverified.
+We expected the game folder's logs to arrive, and didn't know about the game's own logs and crash reports, which live inside the Proton prefix.
+
+Bleack, a tester in the user's group, played the session of 2026-11-13 on CachyOS with Cyberpunk 2077 2.5 under Proton, running 0.3.0 and the updates after it (user, 2026-11-14).
+We read the host's session folder on 2026-11-14 (measured on the host's Windows 11 PC):
+
+- Bleack's `_peer.txt` says the PC picks up 142 files in the game folder, 0 crash reports, 3 of the game's own logs, and the app's log.
+- The host holds 246 files under Bleack's `game/` and the app's log under `app/`, and no `localappdata/` or `crash-reports/` folder.
+- Each of the three Windows testers' folders from the same session holds both, with 2 to 4 of the game's own logs.
+
+So the 3 files the PC found never arrived.
+TBD: whether they're older than 24 hours, which the first send leaves out, or the app read a Proton prefix other than the one the game runs in; their paths and dates on Bleack's PC settle it.
+This affects [the v1 scope](../product/02-v1-scope.md#updates-and-platforms).
+
 ## 2026-11-13: In a real session, a tester's new line reached the host in 0.96s, a rotation was a rename, and a restart sent nothing twice
 
 We asked whether stage 5's exit holds with the core carrying `coop-logs` over the relay: a line within 2s, a rotation renamed without sending it again, and nothing sent twice after a tester restarts.

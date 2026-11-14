@@ -58,7 +58,7 @@ The Settings window, Velopack's update check, and the app's own log.
 
 Exit: a Windows install from one release updates itself to the next.
 
-- **Dropped:** an AppImage joining a session on a Steam Deck, which this plan first asked for from CP77 Log Collector's support for Steam Deck desktop mode (read in CP77 Log Collector, README.md), until the user said nobody in their group plays on Linux or a Deck (2026-11-13).
+- **Dropped:** an AppImage joining a session on a Steam Deck, which this plan first asked for from CP77 Log Collector's support for Steam Deck desktop mode (read in CP77 Log Collector, README.md), until the user said nobody in their group has a Steam Deck (2026-11-13).
   The Linux build stays; [the v1 scope](02-v1-scope.md#updates-and-platforms) says what it has run on.
 
 Done on 2026-11-13 ([build log](../build/log.md#2026-11-13-an-installed-020-found-030-by-itself-built-it-from-the-delta-and-restarted-into-it-in-3s)).

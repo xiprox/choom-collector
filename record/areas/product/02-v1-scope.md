@@ -130,7 +130,7 @@ A mod is a top-level folder in one of the game's mod places, and folders with th
 
 - The app updates itself from the project's GitHub releases with Velopack, delta packages included ([decision 004](../../decisions/004-releases-with-release-please-and-velopack.md)).
 - Windows 10 and 11 on x64, and Linux on x64.
-  CI builds Linux and runs every test on it, and the user ran the app on a Linux desktop on 2026-11-13, where it worked without trouble (user, 2026-11-14); which version and distribution, and whether it joined a session, aren't recorded.
+  CI builds Linux and runs every test on it, and Bleack, a tester in the user's group, played the session of 2026-11-13 on CachyOS under Proton: the game folder's logs and the app's log reached the host, and the game's own logs didn't ([logs log](../logs/log.md#2026-11-14-a-tester-on-linux-sent-the-game-folders-logs-and-the-apps-log-but-none-of-the-games-own-logs-their-pc-found)).
   We haven't run a release on a Steam Deck.
 - On Linux the app finds the game in every Steam library, for native, Flatpak, and Snap Steam, and in Heroic and Lutris installs (read in CP77 Log Collector, README.md, "Linux").
 - TBD: whether v1 keeps CP77 Log Collector's mode without a window (`--nogui`), which it offers for Linux PCs missing X11 libraries; the user hasn't said.
