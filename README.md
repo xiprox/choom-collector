@@ -9,7 +9,12 @@ Point Claude at it and ask it to diagnose a crash, a mod error, or something som
 
 Everyone runs the same app, on Windows or Linux, and once it's set up nobody has to touch it.
 
-![The host's window: the session's players on the left, and on the right the mods shared in the session, with a tile per follower showing whether their copy is up to date](.github/readme/host-window.png)
+![The host's window: the session's players on the left, and on the right the mods shared in the session, with a tile per follower showing whether their copy is up to date](.github/readme/host-window.webp)
+
+<p>
+  <img src=".github/readme/ask-about-a-crash.webp" width="49%" align="top" alt="Asked why a friend's game crashed, the AI traces it to a known game bug in the session's logs">
+  <img src=".github/readme/ask-about-a-screenshot.webp" width="49%" align="top" alt="Asked about a friend's screenshot from the game, the AI checks their logs before answering">
+</p>
 
 ## Join a session
 
@@ -49,8 +54,8 @@ Folders with the same name in different places are treated as one mod, so a mod 
   It shows under "Shared in this session" for everyone.
 - **Following:** tick a mod under "Shared in this session".
   When the sharer saves a file in the mod, your copy is replaced within seconds, and a file the sharer deletes is deleted from yours.
-- **Updating while the game runs:** on Windows, a file the game holds is replaced once the game lets go of it, and the status says when you need to restart the game to load the new build, or, for a CET mod, choose "Reload all mods" in CET's overlay.
-- **Checking followers:** each follower gets a tile on the mod's row, which shows whether their copy is up to date, fetching, or waiting for a game restart or a CET reload.
+- **Updating while the game runs:** on Windows, a file the game holds is replaced once the game lets go of it, and the status says when you need to restart the game to load the new build.
+- **Checking followers:** each follower gets a tile on the mod's row, which shows whether their copy is up to date, updating, or waiting for a game restart.
 - **Unfollowing:** untick the mod, and the app asks whether to keep your copy or delete it.
 
 A followed folder is a copy of the sharer's, so an edit you make in it is undone within seconds.
@@ -82,10 +87,9 @@ To pick up files a mod writes that aren't logs, such as `bin/x64/StreetVendors/*
 When a tester joins, they send their recent logs, and after that each new line as it's written.
 Copies are plain files, readable while they're being written.
 
-### Reading them with Claude
+### Reading them with AI
 
-Tell Claude once where the logs are, and ask it to remember.
-In Claude Code, for example, with the folder "Logs go to" shows in place of the path:
+Tell the AI once where the logs are, and ask it to remember.
 
 ```text
 Logs from everyone in my Cyberpunk 2077 co-op sessions are collected with Choom Collector (https://github.com/xiprox/choom-collector) into C:\Users\<user>\Documents\Choom Collector Logs, one folder per session named by its date and code, with a folder per player inside.
@@ -96,11 +100,11 @@ Save this in memory.
 ## What it isn't
 
 - **Not a log viewer.**
-  The window shows which logs each PC picks up and where they land, and Claude reads them.
+  This app is designed for having AI read the logs, not the user, so it has no log browsing/viewing features.
 - **Not a mod manager.**
-  It doesn't install mods from Nexus, order them, or resolve conflicts; it copies the folders a player shares.
+  It doesn't install mods from Nexus, order them, or resolve conflicts; it only blindly copies the folders a player shares.
 - **Not for other games.**
-  It knows only Cyberpunk 2077's folders and mod places, and a fork for another game is welcome.
+  It knows only Cyberpunk 2077's folders and mod places. A fork for another game is welcome.
 
 ## Known limits
 
@@ -108,7 +112,6 @@ Save this in memory.
 - Players can't reach each other directly, so when the host's app isn't running, no logs or mods move.
   Everyone's copies stay as they are, and a file on its way picks up where it stopped.
 - A tester whose game version differs from the host's is told so, since mods built for one version may not load in another.
-- We haven't tried it on a Steam Deck.
 
 ## Build it
 
