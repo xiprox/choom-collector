@@ -16,6 +16,7 @@ You need a Cloudflare account, which is free, and [Node.js](https://nodejs.org/)
    ```
 
    You'll see a `node_modules` folder appear.
+
 3. Sign in to Cloudflare:
 
    ```bash
@@ -23,6 +24,7 @@ You need a Cloudflare account, which is free, and [Node.js](https://nodejs.org/)
    ```
 
    A browser page asks you to allow Wrangler, Cloudflare's command-line tool; once you allow it, the terminal says you're logged in.
+
 4. Deploy the relay:
 
    ```bash
@@ -30,6 +32,7 @@ You need a Cloudflare account, which is free, and [Node.js](https://nodejs.org/)
    ```
 
    The last lines name its address, such as `https://cyberpunk-coop-tools-relay.<your-subdomain>.workers.dev`.
+
 5. In the app's setup, choose Host, and enter that address without `https://`: `cyberpunk-coop-tools-relay.<your-subdomain>.workers.dev`.
 
 To update the relay after pulling a newer version of this repository, run `npx wrangler deploy` again in this folder.
@@ -37,7 +40,6 @@ To update the relay after pulling a newer version of this repository, run `npx w
 ## What it does
 
 [Relay and sessions](../record/areas/network/01-relay-and-sessions.md) describes its requests, frames, and limits.
-It's forked from fsc-editor's Remote Connect relay, and changed to carry the app's messages as binary frames.
 
 ## Running it on your PC
 
