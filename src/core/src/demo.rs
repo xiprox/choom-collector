@@ -211,7 +211,7 @@ fn setup(role: Role) -> Setup {
             folder: PathBuf::from(r"D:\SteamLibrary\steamapps\common\Cyberpunk 2077"),
             version: Some(if role == Role::Tester { "2.3" } else { "2.31" }.into()),
         }),
-        steam_name: if role == Role::Tester { "tetsu" } else { "xip" }.into(),
+        steam_name: if role == Role::Tester { "tetsu" } else { "kade" }.into(),
         error: None,
     }
 }
@@ -242,8 +242,8 @@ fn session(role: Role) -> Session {
         sources: None,
     };
     let mut players = vec![
-        player(1, "xip", host, true, "2.31", "Windows 11", 75, 0, PlayerState::Fine),
-        player(2, "bossun", false, false, "2.31", "Windows 11", 71, 12_400_000, PlayerState::Fetching { done: 4, total: 12 }),
+        player(1, "kade", host, true, "2.31", "Windows 11", 75, 0, PlayerState::Fine),
+        player(2, "rin", false, false, "2.31", "Windows 11", 71, 12_400_000, PlayerState::Fetching { done: 4, total: 12 }),
         player(3, "mira", false, false, "2.31", "Windows 10", 60, 3_100_000, PlayerState::Reconnecting),
         player(4, "tetsu", !host, false, "2.3", "SteamOS, Steam Deck", 2, 4_100_000, PlayerState::NeedsRestart),
     ];
@@ -265,14 +265,14 @@ fn session(role: Role) -> Session {
             SharedMod {
                 key: "street vendors+".into(),
                 name: "Street Vendors+".into(),
-                sharer: "xip".into(),
+                sharer: "kade".into(),
                 mine: true,
                 follow: Follow::No,
                 has_dll: false,
                 status: ModStatus::Sharing,
                 changed: Some(now - Ago::minutes(2)),
                 followers: vec![
-                    tile("bossun", Delivery::Fetching { done: 4, total: 12 }),
+                    tile("rin", Delivery::Fetching { done: 4, total: 12 }),
                     tile("mira", Delivery::Paused),
                     tile("tetsu", Delivery::NeedsRestart),
                 ],
@@ -280,22 +280,22 @@ fn session(role: Role) -> Session {
             SharedMod {
                 key: "neon signs overhaul".into(),
                 name: "Neon Signs Overhaul".into(),
-                sharer: "xip".into(),
+                sharer: "kade".into(),
                 mine: true,
                 follow: Follow::No,
                 has_dll: false,
                 status: ModStatus::Sharing,
                 changed: Some(now - Ago::minutes(45)),
-                followers: ["bossun", "mira", "tetsu"].iter().map(|n| tile(n, Delivery::UpToDate)).collect(),
+                followers: ["rin", "mira", "tetsu"].iter().map(|n| tile(n, Delivery::UpToDate)).collect(),
             },
-            others_mod("equipmentex", "EquipmentEx", "bossun", true, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(59)),
+            others_mod("equipmentex", "EquipmentEx", "rin", true, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(59)),
             others_mod("better apartments", "Better Apartments", "mira", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
         ]
     } else {
         vec![
-            others_mod("street vendors+", "Street Vendors+", "xip", false, Follow::Yes, ModStatus::NeedsRestart, now - Ago::minutes(2)),
-            others_mod("neon signs overhaul", "Neon Signs Overhaul", "xip", false, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(45)),
-            others_mod("equipmentex", "EquipmentEx", "bossun", true, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(59)),
+            others_mod("street vendors+", "Street Vendors+", "kade", false, Follow::Yes, ModStatus::NeedsRestart, now - Ago::minutes(2)),
+            others_mod("neon signs overhaul", "Neon Signs Overhaul", "kade", false, Follow::Yes, ModStatus::UpToDate, now - Ago::minutes(45)),
+            others_mod("equipmentex", "EquipmentEx", "rin", true, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(59)),
             others_mod("better apartments", "Better Apartments", "mira", false, Follow::No, ModStatus::NotOnYourPc, now - Ago::minutes(73)),
         ]
     };
@@ -322,14 +322,14 @@ fn session(role: Role) -> Session {
         code: "K7RM2Q".into(),
         relay: "relay.example.net".into(),
         link: Link::Connected { latency_ms: 38 },
-        host_name: "xip".into(),
+        host_name: "kade".into(),
         players,
         shared,
         my_mods,
         logs: if host {
             LogsLine::Host { folder: PathBuf::from(r"D:\Cyberpunk Logs\2026-11-13 K7R-M2Q") }
         } else {
-            LogsLine::Tester { host: "xip".into(), sending: Sending::CatchingUp { done: 38, total: 96 } }
+            LogsLine::Tester { host: "kade".into(), sending: Sending::CatchingUp { done: 38, total: 96 } }
         },
         problem: None,
     }
