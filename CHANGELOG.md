@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0](https://github.com/xiprox/choom-collector/compare/v0.4.1...v0.5.0) (2026-11-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* protocol 2 adds the reload state to what followers report, so a host and a tester on different versions refuse each other until both update.
+
+### Features
+
+* ask for a CET reload instead of a game restart when a followed CET mod changes ([dcf4950](https://github.com/xiprox/choom-collector/commit/dcf4950c25771b14eaecc8a3ac2c31c0b055a426))
+* copy the relay and the code as one line from the host's code ([2411223](https://github.com/xiprox/choom-collector/commit/241122368a60c7aebbbde7afe307128b85b35a1a))
+
+
+### Bug Fixes
+
+* keep the relay's address without https:// or a trailing slash, however it's pasted ([73b813e](https://github.com/xiprox/choom-collector/commit/73b813ebff04abd037e113ca9cf3605e037c6c11))
+* name where each kind of log comes from in the app's log, and keep the player's user name out of it ([44edf6f](https://github.com/xiprox/choom-collector/commit/44edf6f5995057e7d7a922516c9608673faaad01))
+* show whole paths, user name included, in the app's log ([7c8abaa](https://github.com/xiprox/choom-collector/commit/7c8abaac03f692c130012656cb5bafb42dd133bf))
+
 ## [0.4.1](https://github.com/xiprox/choom-collector/compare/v0.4.0...v0.4.1) (2026-11-13)
 
 

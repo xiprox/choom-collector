@@ -815,7 +815,7 @@ dependencies = [
 
 [[package]]
 name = "choom-collector"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "async-channel",
  "chrono",
@@ -963,7 +963,7 @@ dependencies = [
 
 [[package]]
 name = "coop-core"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "async-channel",
@@ -987,7 +987,7 @@ dependencies = [
 
 [[package]]
 name = "coop-logs"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "coop-proto",
@@ -999,7 +999,7 @@ dependencies = [
 
 [[package]]
 name = "coop-mods"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "chrono",
  "coop-proto",
@@ -1014,7 +1014,7 @@ dependencies = [
 
 [[package]]
 name = "coop-proto"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "postcard",
  "serde",
