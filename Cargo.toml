@@ -33,13 +33,13 @@ exclude = ["experiments"]
 [workspace.package]
 edition = "2024"
 
-# Thin LTO over 16 codegen units builds a release several times faster than full LTO over one, for
-# a slightly bigger program (the user, 2026-11-13); 0.4.0, on full LTO, took 9.5 minutes to build
-# on Windows from a cold cache.
+# Full LTO over one codegen unit, for the smallest program and update packages. Thin LTO over 16
+# was tried for 0.4.1 and built no faster on Windows, while the package grew from 10.3 to 11.1 MB
+# and the update delta from 2.6 to 7.0 MB (record/areas/build/log.md).
 [profile.release]
 opt-level = "s"
-lto = "thin"
-codegen-units = 16
+lto = true
+codegen-units = 1
 strip = true
 
 [build-dependencies]

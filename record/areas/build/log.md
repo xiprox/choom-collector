@@ -1,5 +1,27 @@
 # Build log
 
+## 2026-11-14: A warm cache, not thin LTO, is what makes a release fast; thin LTO only grew the program
+
+We asked whether releasing with thin LTO over 16 codegen units, instead of full LTO over one, cuts a release's build, after 0.4.0 took 9.5 minutes on Windows from a cold cache.
+We expected thin LTO to build two to three times faster, for a slightly bigger program.
+
+A packaging dry run and release 0.4.1 built with thin LTO, and ``Swatinem/rust-cache``'s logs and ``gh cache list`` showed which cache each restored (measured on GitHub Actions, 2026-11-13):
+
+| Build | Cache | Compile step | Whole job |
+| --- | --- | --- | --- |
+| 0.4.0, Windows, full LTO | none | | 9.5 min |
+| Dry run, Windows, thin LTO | 0.4.0's, built with full LTO | 7.3 min | 10.0 min |
+| 0.4.1, Windows, thin LTO | 0.4.0's, built with full LTO | 7.1 min | 10.1 min |
+| 0.4.1, Linux, thin LTO | the dry run's, an exact match | 1.6 min | 3.0 min |
+
+- A change to the release profile recompiles every dependency, so a cache built under the other profile saves nothing.
+- On Linux, with an exact match, only the five crates of our own were compiled.
+- Windows missed only by timing: 0.4.1's job started at 19:47, while the dry run's Windows job saved its cache at 19:50.
+- Thin LTO made the Windows package 11.06 MB, against 10.33 MB, and the update delta from 0.4.0 7.02 MB, against 2.56 MB for the full-LTO delta from 0.2.0 to 0.3.0.
+
+So releases went back to full LTO, and a release whose profile hasn't changed should build in about 3 minutes on each platform, once its cache is saved.
+The repository's caches came to about 10 GB, GitHub's limit, so an older one can be evicted and make the next build cold (unverified how often).
+
 ## 2026-11-13: An installed 0.2.0 found 0.3.0 by itself, built it from the delta, and restarted into it in 3s
 
 We asked whether an installed copy updates itself from one release to the next, as [decision 004](../../decisions/004-releases-with-release-please-and-velopack.md) and stage 7's exit expect.
