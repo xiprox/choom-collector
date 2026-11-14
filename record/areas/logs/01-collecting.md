@@ -170,8 +170,8 @@ A host that starts on another day gets a new session folder, and every player se
 - `Sender::progress` is `CatchingUp { done, total }` while any file has more on disk than was sent after a tick: `total` counts every file that's had something left to send since the last time nothing was, and `done` the ones among them with nothing left.
   Otherwise it's `UpToDate`.
 - `Sender::sent_bytes` and `Collector::received_bytes` count log bytes before compression, the first since the `Sender` started and the second since the `Collector` did.
-- `Sender::report` gives each source's folder, whether it exists, its files, and how many changed within the 24 hours the first send uses, and the core writes one line a source to the app's log when it makes a `Sender`, such as `Logs: localappdata from ~\AppData\Local\CD Projekt Red\Cyberpunk 2077, 3 files, 1 changed in the last 24 hours` (measured on Windows 11, 2026-11-14).
-  The app's log reaches the host, so a path shows the home folder as `~` and a folder named like the user, as a Wine prefix's user folder can be, as `<user>`, and the user's name stays on their PC, as it does in `_peer.txt`.
+- `Sender::report` gives each source's folder, whether it exists, its files, and how many changed within the 24 hours the first send uses, and the core writes one line a source to the app's log when it makes a `Sender`, such as `Logs: localappdata from C:\Users\<user>\AppData\Local\CD Projekt Red\Cyberpunk 2077, 3 files, 1 changed in the last 24 hours` (measured on Windows 11, 2026-11-14).
+  The paths are whole, the user's name included, although the app's log reaches the host, since the user's group is fine with the host seeing them there (user, 2026-11-14).
 
 ## The host's folder
 

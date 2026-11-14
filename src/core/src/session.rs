@@ -4,7 +4,7 @@
 //! state changes.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -363,7 +363,7 @@ impl Core {
         for r in sender.report() {
             let missing = if r.exists { "" } else { ", which isn't there" };
             let files = if r.files == 1 { "1 file".to_string() } else { format!("{} files", r.files) };
-            log::info!("Logs: {} from {}{missing}, {files}, {} changed in the last 24 hours", r.label, without_home(&r.root), r.recent);
+            log::info!("Logs: {} from {}{missing}, {files}, {} changed in the last 24 hours", r.label, r.root.display(), r.recent);
         }
         Some(sender)
     }
@@ -1258,48 +1258,4 @@ fn sources(counts: Vec<SourceCount>) -> Option<Vec<LogSource>> {
 /// `K7RM2Q` reads `K7R-M2Q`.
 fn display_code(code: &str) -> String {
     if code.len() == 6 { format!("{}-{}", &code[..3], &code[3..]) } else { code.to_string() }
-}
-
-/// A path as the app's own log shows it. That log reaches the host, and the player's user name
-/// stays on their PC, as it does in `_peer.txt`: the home folder shows as `~`, and a folder named
-/// like the user, as a Wine prefix's user folder can be, as `<user>`.
-pub(crate) fn without_home(path: &Path) -> String {
-    match dirs::home_dir() {
-        Some(home) => without_home_in(path, &home),
-        None => path.display().to_string(),
-    }
-}
-
-fn without_home_in(path: &Path, home: &Path) -> String {
-    let sep = std::path::MAIN_SEPARATOR;
-    let mut text = match path.strip_prefix(home) {
-        Ok(rest) if rest.as_os_str().is_empty() => "~".to_string(),
-        Ok(rest) => format!("~{sep}{}", rest.display()),
-        Err(_) => path.display().to_string(),
-    };
-    if let Some(user) = home.file_name().and_then(|u| u.to_str()).filter(|u| !u.is_empty()) {
-        text = text.replace(&format!("{sep}{user}{sep}"), &format!("{sep}<user>{sep}"));
-        if let Some(start) = text.strip_suffix(&format!("{sep}{user}")).map(str::len) {
-            text.truncate(start);
-            text.push_str(&format!("{sep}<user>"));
-        }
-    }
-    text
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn paths_in_the_apps_log_leave_the_user_name_out() {
-        let home = PathBuf::from("home").join("bleack");
-        let prefix_local = ["drive_c", "users", "bleack", "AppData", "Local"].iter().fold(home.join(".steam").join("pfx"), |p, s| p.join(s));
-        let sep = std::path::MAIN_SEPARATOR_STR;
-        assert_eq!(without_home_in(&prefix_local, &home), ["~", ".steam", "pfx", "drive_c", "users", "<user>", "AppData", "Local"].join(sep));
-        assert_eq!(without_home_in(&home, &home), "~");
-        let game = PathBuf::from("games").join("Cyberpunk 2077");
-        assert_eq!(without_home_in(&game, &home), game.display().to_string());
-        assert_eq!(without_home_in(&PathBuf::from("mnt").join("bleack"), &home), ["mnt", "<user>"].join(sep));
-    }
 }
