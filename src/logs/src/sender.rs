@@ -11,7 +11,7 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use crate::SourceCount;
 use crate::ident::{fingerprint, fingerprint_of, fnv, read_full};
-use crate::scan::{Found, Scanner};
+use crate::scan::{Found, Scanner, SourceReport};
 use crate::wire::{BLOCK, HostHas, Message, Move, Outbox, deflate};
 
 /// A file is recognized by up to this many of its first bytes, with its fingerprint.
@@ -128,6 +128,11 @@ impl Sender {
             sent_bytes: 0,
             outbox: Outbox::default(),
         }
+    }
+
+    /// Where each source looks and what it finds, judged by the same 24 hours the first send uses.
+    pub fn report(&self) -> Vec<SourceReport> {
+        self.scanner.report(HISTORY_AGE)
     }
 
     /// Takes the host's extra paths, which the next tick scans.

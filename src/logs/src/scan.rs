@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 
 use crate::{SourceCount, SourceKind};
 
@@ -24,6 +24,18 @@ pub struct Found {
 pub struct Scan {
     pub files: BTreeMap<String, Found>,
     pub counts: Vec<SourceCount>,
+}
+
+/// Where one source looks and what it finds there, for the player's own log.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SourceReport {
+    /// The logical path of the source's root, such as `game` or `localappdata`.
+    pub label: String,
+    pub root: PathBuf,
+    pub exists: bool,
+    pub files: u32,
+    /// Files the first send after joining includes, since they changed within its 24 hours.
+    pub recent: u32,
 }
 
 #[derive(Clone, Copy)]
@@ -138,6 +150,24 @@ impl Scanner {
             scan.counts.push(SourceCount { kind: source.kind.clone(), count });
         }
         scan
+    }
+
+    /// Where each source looks and what it finds, so a kind of file that never reaches the host
+    /// can be told apart on the player's PC: a folder that isn't there, or files that hadn't
+    /// changed for longer than `history_age`, which the first send after joining leaves out.
+    pub fn report(&self, history_age: Duration) -> Vec<SourceReport> {
+        let scan = self.scan();
+        let now = SystemTime::now();
+        self.sources
+            .iter()
+            .map(|source| {
+                let under = format!("{}/", source.label);
+                let mine: Vec<&Found> = scan.files.values().filter(|f| f.logical == source.label || f.logical.starts_with(&under)).collect();
+                // The same test the first send makes, so a file dated in the future counts as recent.
+                let recent = mine.iter().filter(|f| !now.duration_since(f.modified).is_ok_and(|age| age > history_age)).count();
+                SourceReport { label: source.label.clone(), root: source.root.clone(), exists: source.root.exists(), files: mine.len() as u32, recent: recent as u32 }
+            })
+            .collect()
     }
 }
 
@@ -280,5 +310,27 @@ mod tests {
         let folder = extra(game, true, "r6/config");
         assert!(matches!(folder.look, Look::Path));
         assert_eq!(folder.label, "extra/r6/config");
+    }
+
+    #[test]
+    fn the_report_says_where_each_source_looks_and_what_is_recent() {
+        let base = std::env::temp_dir().join(format!("coop-report-{}-{}", std::process::id(), SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_nanos()));
+        let game = base.join("game");
+        fs::create_dir_all(game.join("r6").join("logs")).unwrap();
+        fs::write(game.join("r6").join("logs").join("new.log"), "new").unwrap();
+        let old = game.join("r6").join("logs").join("old.log");
+        fs::write(&old, "old").unwrap();
+        let two_days = Duration::from_secs(2 * 24 * 60 * 60);
+        fs::File::options().write(true).open(&old).unwrap().set_modified(SystemTime::now() - two_days).unwrap();
+        // A Proton prefix with no AppData for the game in it.
+        let local = base.join("pfx").join("drive_c").join("users").join("steamuser").join("AppData").join("Local");
+
+        let report = Scanner::new(&game, Some(&local), None, &[]).report(Duration::from_secs(24 * 60 * 60));
+        let line = |label: &str| report.iter().find(|r| r.label == label).cloned().unwrap();
+        assert_eq!(line("game"), SourceReport { label: "game".into(), root: game.clone(), exists: true, files: 2, recent: 1 });
+        assert_eq!((line("crash-reports").exists, line("crash-reports").files), (false, 0));
+        assert_eq!(line("localappdata").root, local.join("CD Projekt Red").join("Cyberpunk 2077"));
+        assert!(!line("localappdata").exists);
+        fs::remove_dir_all(base).unwrap();
     }
 }

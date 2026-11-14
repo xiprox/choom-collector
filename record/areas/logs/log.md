@@ -10,11 +10,13 @@ We read the host's session folder on 2026-11-14 (measured on the host's Windows 
 
 - Bleack's `_peer.txt` says the PC picks up 142 files in the game folder, 0 crash reports, 3 of the game's own logs, and the app's log.
 - The host holds 246 files under Bleack's `game/` and the app's log under `app/`, and no `localappdata/` or `crash-reports/` folder.
-- Each of the three Windows testers' folders from the same session holds both, with 2 to 4 of the game's own logs.
+- Every other player's folder from the same session, the host's and two Windows testers', holds `localappdata/CrashInfo.json`, `localappdata/UserSettings.json`, and a `crash-reports/` folder.
 
 So the 3 files the PC found never arrived.
 TBD: whether they're older than 24 hours, which the first send leaves out, or the app read a Proton prefix other than the one the game runs in; their paths and dates on Bleack's PC settle it.
-This affects [the v1 scope](../product/02-v1-scope.md#updates-and-platforms).
+
+This led to the app's log naming each source's folder when a session starts, with its files and how many changed in the last 24 hours, as [sources and progress](01-collecting.md#sources-and-progress) describes, so Bleack's next session settles the TBD.
+It affects [the v1 scope](../product/02-v1-scope.md#updates-and-platforms).
 
 ## 2026-11-13: In a real session, a tester's new line reached the host in 0.96s, a rotation was a rename, and a restart sent nothing twice
 

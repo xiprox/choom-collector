@@ -44,7 +44,7 @@ pub fn start(options: Options) -> (async_channel::Sender<Command>, async_channel
                 }
             };
             let app_log = applog::start(&data_dir);
-            log::info!("Choom Collector {} starting, data in {}", options.app_version, data_dir.display());
+            log::info!("Choom Collector {} starting, data in {}", options.app_version, session::without_home(&data_dir));
             session::start(data_dir, app_log, options.app_version, options.name, options.local_app_data)
         }
     }

@@ -15,6 +15,7 @@ mod wire;
 use serde::{Deserialize, Serialize};
 
 pub use collector::{Collector, PeerInfo};
+pub use scan::SourceReport;
 pub use sender::{Progress, Sender, SenderConfig};
 
 /// Where on a player's PC a log was picked up.
