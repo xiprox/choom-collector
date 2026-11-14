@@ -97,9 +97,10 @@ impl AppView {
             Role::Host => "Stop hosting".to_string(),
             Role::Tester => format!("Leave {}'s session", s.host_name),
         };
-        // Just the code: testers set the relay once, so the code is all a returning group needs.
-        let invite = code(&s.code);
-        let tip = "Copy the code".to_string();
+        // The relay and the code in one line, which a new tester pastes into setup's Invite in one
+        // go; a returning tester's app already has the relay, and a code field takes the line too.
+        let invite = format!("{}/{}", s.relay.trim().trim_end_matches('/'), code(&s.code));
+        let tip = "Copy the invite".to_string();
         let copied = self.copied_invite;
         TitleBar::new()
             .h(TITLE_BAR)

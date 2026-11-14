@@ -32,6 +32,7 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   | Up to date | Done |
   | Fetching n of m files | Accent |
   | Has it, needs a game restart | Warning |
+  | Has it, needs a CET reload | Warning |
   | Paused while reconnecting | Control, with a muted letter |
 
 - **Because:** the user wanted delivery readable without a hover, and color that carries information keeps the screen from blending into gray (round 5 of the log entry).
@@ -44,7 +45,8 @@ Stage 2 of [the plan](../product/plan.md) built these, and stage 9 matches the r
   - Host asks for the relay, with a link to the deploy guide, shows the code with New code, and the logs folder with Change.
   - The name comes from Steam and shows as a sentence, "You'll show up as tetsu, your Steam name", with no field.
   - After setup the app hosts or joins by itself whenever it starts.
-- **Because:** testers set the app up once and forget it, and the invite stays just a code once the relay is set (round 6 of the log entry).
+  - The host's code in the title bar copies the invite, the relay and the code as one line, `relay.example.net/K7R-M2Q`, and a code field in Settings takes that line too (user, 2026-11-14).
+- **Because:** testers set the app up once and forget it (round 6 of the log entry), and a new tester gets the relay and the code in one paste.
 
 ## The look is dense and plain, with color only where it means something
 

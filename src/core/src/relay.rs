@@ -32,8 +32,11 @@ pub fn new_code() -> String {
     (0..CODE_LENGTH).map(|_| alphabet[rand::random_range(0..alphabet.len())] as char).collect()
 }
 
-/// Takes a code as players type it, with a hyphen or spaces, in either case.
+/// Takes a code as players type it, with a hyphen or spaces, in either case, or as the end of the
+/// invite the host copies, `relay.example.net/K7R-M2Q`, so pasting the whole invite into a code
+/// field works.
 pub fn parse_code(input: &str) -> Option<String> {
+    let input = input.rsplit('/').next().unwrap_or_default();
     let cleaned: String = input.chars().filter(char::is_ascii_alphanumeric).map(|c| c.to_ascii_uppercase()).collect();
     (cleaned.len() == CODE_LENGTH && cleaned.chars().all(|c| CODE_ALPHABET.contains(c))).then_some(cleaned)
 }
@@ -307,6 +310,13 @@ mod tests {
         assert_eq!(parse_code("K7R-M2"), None);
         // O and 0 aren't in the alphabet, since they're misread for each other.
         assert_eq!(parse_code("K7R-M20"), None);
+    }
+
+    #[test]
+    fn a_pasted_invite_gives_its_code() {
+        assert_eq!(parse_code("relay.example.net/K7R-M2Q").as_deref(), Some("K7RM2Q"));
+        assert_eq!(parse_code("ws://127.0.0.1:8787/k7r-m2q").as_deref(), Some("K7RM2Q"));
+        assert_eq!(parse_code("relay.example.net/"), None);
     }
 
     #[test]
